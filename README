@@ -1,13 +1,8 @@
+//my username is LuckyHappyBear
 $ cd ~
-
 $ mkdir php
-
 $ cd php
-
 $ git clone git@github.com:yjicfdx/php(注：此处的yjicfdx为你自己的账号名，php为你在github中创建的仓库名称)
-
 $ git add .
-
 $ git commit -m "your explain"
-
 $ git push

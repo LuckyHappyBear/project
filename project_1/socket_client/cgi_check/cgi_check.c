@@ -38,7 +38,7 @@ int cgi_check(char *IMSI, char *IP)
     memset(&sendline, 0, MAXLINE);
     memset(&sendline, 0, MAXLINE);
 
-    if (sockfd = socket(AF_INET,SOCK_STREAM, 0) < 0)
+    if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
         perror("cgi_check:Problem in creating the socket\n");
         exit(1);
@@ -53,7 +53,7 @@ int cgi_check(char *IMSI, char *IP)
     /* connection of the client to the socket */
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
-        perror("cgi_check:Problem in connecting to the server\n");
+        perror("cgi_check:Problem in connecting to the server");
         exit(2);
     }
 
@@ -63,30 +63,35 @@ int cgi_check(char *IMSI, char *IP)
 
     while (1)
     {
-        if (recv(sockfd, recvline, MAXLINE, 0) == 0)
+        printf("we reach here or not\n");
+        if (recv(sockfd, recvline, MAXLINE, 0) < 0)
         {
             perror("cgi_check:The server terminated prematurely\n");
             exit(3);
         }
-
-        /* server response this request */
-        if (strncmp(recvline, CHECK_RESPONSE, CHECK_MARK_LEN) == 0)
-        {
-            char remain_space[REMAIN_FIELD_LEN];
-            strncpy(remain_space, &recvline[CHECK_MARK_LEN], REMAIN_FIELD_LEN);
-            return_code = atoi(remain_space);
-            return return_code;
-        }
         else
         {
-            /* server doesn't response this request */
-            return_code = -1;
-            return return_code;
+            /* server response this request */
+            if (strncmp(recvline, CHECK_RESPONSE, CHECK_MARK_LEN) == 0)
+            {
+                char remain_space[REMAIN_FIELD_LEN];
+                strncpy(remain_space, &recvline[CHECK_MARK_LEN], REMAIN_FIELD_LEN);
+                return_code = atoi(remain_space);
+                printf("the recvline is %s\n", recvline);
+                return return_code;
+            }
+            else
+            {
+                /* server doesn't response this request */
+                return_code = -1;
+                return return_code;
+            }
         }
     }
 }
 
 int main()
 {
-    cgi_check("IMSIIS0755110000","127.0.0.2");
+    cgi_check("IMSIIS0755110000","127.0.0.1");
+    return 0;
 }

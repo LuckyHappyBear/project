@@ -28,6 +28,7 @@
 #define RESPONSE_MARK_LEN 2 /* the response mark's length */
 #define IMSI_LEN 15 /* the length of the IMSI*/
 #define REMAIN_FIELD_LEN 2 /* the length of the remain field in check respose */
+
 char* itoa(int num, char*str, int radix)
 {
     char index[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -76,19 +77,22 @@ char* itoa(int num, char*str, int radix)
 
 int main()
 {
-    pid_t childpid;
     socklen_t clilen;
     int listenfd, connfd;
     char sendbuf[MAXLINE], recvbuf[MAXLINE];
     struct sockaddr_in cliaddr, servaddr;
 
     /* initialize the send and receive buffer */
+    memset(sendbuf, 0, MAXLINE);
+    memset(recvbuf, 0, MAXLINE);
+
     /* create a socket */
-    if (listenfd = socket(AF_INET, SOCK_STREAM, 0) < 0)
+    if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         perror("Problem in creating the socket");
         exit(1);
     }
+
     /* preparation of the socket address */
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -103,7 +107,7 @@ int main()
 
     printf("Server running...waiting for connections.\n");
 
-    for (;;)
+    while (1)
     {
         clilen = sizeof(cliaddr);
         /* accept a connection */
@@ -111,39 +115,28 @@ int main()
 
         printf("Received request...\n");
 
-        if ((childpid = fork()) == 0)
+        if (recv(connfd, recvbuf, MAXLINE, 0) > 0)
         {
-            printf("Child created for dealing with client requests");
-
-            /* close listening socket */
-            close(listenfd);
-
-            while (1)
+            if (strncmp(recvbuf,CHECK_RESPONSE,
+                        RESPONSE_MARK_LEN) == 0)
             {
-                if (recv(connfd, recvbuf, MAXLINE, 0) < 0)
-                {
-                    perror("recv error\n");
-                    exit(2);
-                }
-                else
-                {
-                    if (strncmp(recvbuf,CHECK_RESPONSE,
-                                RESPONSE_MARK_LEN) == 0)
-                    {
-                        int remain = 10;
-                        char IMSI[IMSI_LEN];
-                        char remain_space[REMAIN_FIELD_LEN];
-                        itoa(remain, remain_space, 10);
-                        strncpy(IMSI, &recvbuf[RESPONSE_MARK_LEN],
-                                IMSI_LEN);
-                        printf("The IMSI is %s\n",IMSI);
-                        strncpy(sendbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN);
-                        strncpy(&sendbuf[RESPONSE_MARK_LEN], remain_space,
-                                REMAIN_FIELD_LEN);
-                        send(connfd, sendbuf, strlen(sendbuf), 0);
-                    }
-                }
+                int remain = 10;
+                char IMSI[IMSI_LEN];
+                char remain_space[REMAIN_FIELD_LEN];
+                itoa(remain, remain_space, 10);
+                strncpy(IMSI, &recvbuf[RESPONSE_MARK_LEN],
+                        IMSI_LEN);
+                printf("The IMSI is %s\n",IMSI);
+                strncpy(sendbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN);
+                strncpy(&sendbuf[RESPONSE_MARK_LEN], remain_space,
+                        REMAIN_FIELD_LEN);
+                send(connfd, sendbuf, strlen(sendbuf), 0);
             }
+        }
+        else
+        {
+            perror("recv error");
+            exit(2);
         }
     }
 }
