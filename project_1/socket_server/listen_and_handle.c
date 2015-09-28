@@ -20,65 +20,22 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_h/message.h"
+#include "../socket_public/message.h"
+#include "../socket_public/public_handle.h"
 
 #define MAXLINE 4096 /* max buffer length */
 #define SERV_PORT 3000 /* port number */
 #define LISTENQ 20 /* maximum number of client connections */
 #define RESPONSE_MARK_LEN 2 /* the response mark's length */
-#define IMSI_LEN 15 /* the length of the IMSI*/
 #define REMAIN_FIELD_LEN 2 /* the length of the remain field in check respose */
-
-char* itoa(int num, char*str, int radix)
-{
-    char index[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    unsigned unum;
-    int i = 0,j,k;
-
-    if (radix == 10 && num < 0)
-    {
-        unum = (unsigned)-num;
-        str[i++] = '-';
-
-    }
-    else
-    {
-        unum = (unsigned)num;
-    }
-    do
-    {
-        str[i++]=index[unum%(unsigned)radix];
-        unum/=radix;
-    }while (unum);
-
-    str[i]='\0';
-
-    if (str[0] == '-')
-    {
-        k = 1;
-    }
-    else
-    {
-        k = 0;
-    }
-
-    char temp;
-
-    for (j = k; j <= (i - 1) / 2; j++)
-    {
-        temp = str[j];
-        str[j] = str[i - 1 + k - j];
-        str[i - 1 + k - j] = temp;
-
-    }
-    return str;
-}
-
+#define FILE_BUFFER_LEN 4000 /* the length of the file buffer */
 
 int main()
 {
     socklen_t clilen;
     int listenfd, connfd;
+    char file_path[512];
+    char file_buffer[FILE_BUFFER_LEN];
     char sendbuf[MAXLINE], recvbuf[MAXLINE];
     struct sockaddr_in cliaddr, servaddr;
 
@@ -90,7 +47,7 @@ int main()
     if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         perror("Problem in creating the socket");
-        exit(1);
+        exit(2);
     }
 
     /* preparation of the socket address */
@@ -115,15 +72,14 @@ int main()
 
         printf("Received request...\n");
 
-        if (recv(connfd, recvbuf, MAXLINE, 0) > 0)
+        while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
         {
-            if (strncmp(recvbuf,CHECK_RESPONSE,
-                        RESPONSE_MARK_LEN) == 0)
+            if (strncmp(recvbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int remain = 10;
                 char IMSI[IMSI_LEN];
                 char remain_space[REMAIN_FIELD_LEN];
-                itoa(remain, remain_space, 10);
+                sprintf(remain_space, "%d",remain);
                 strncpy(IMSI, &recvbuf[RESPONSE_MARK_LEN],
                         IMSI_LEN);
                 printf("The IMSI is %s\n",IMSI);
@@ -131,12 +87,68 @@ int main()
                 strncpy(&sendbuf[RESPONSE_MARK_LEN], remain_space,
                         REMAIN_FIELD_LEN);
                 send(connfd, sendbuf, strlen(sendbuf), 0);
+                memset(sendbuf, 0, MAXLINE);
             }
-        }
-        else
-        {
-            perror("recv error");
-            exit(2);
+            else if (strncmp(recvbuf, BACKUP_RESPONSE, RESPONSE_MARK_LEN) == 0)
+            {
+                /* receive the backup request from client */
+                int start_pos = 3;
+                if (recvbuf[2] == '0')
+                {
+                    struct version_info* ver = malloc(sizeof(*ver));
+                    if(NULL == ver)
+                    {
+                        perror("space allocate failed\n");
+                    }
+                    //printf("the size is sizeof(*ver):%d\n",sizeof(*ver));
+                    memset(ver, 0, sizeof(struct version_info));
+
+                    /* assign every struct field */
+                    /* IMSI field */
+                    strncpy(ver->imsi, &recvbuf[start_pos],IMSI_LEN);
+                    ver->imsi[IMSI_LEN] = '\0';
+                    //printf("the imsi is %s,the length is %d\n",ver->imsi,strlen(ver->imsi));
+                    /* product_id field */
+                    start_pos += IMSI_LEN;
+                    strncpy(ver->product_id, &recvbuf[start_pos],
+                            PRODUCT_ID_LEN);
+                    ver->product_id[PRODUCT_ID_LEN] = '\0';
+                    //printf("the product id is %s,the length is %d\n",ver->product_id,strlen(ver->product_id));
+
+                    /* version_no field */
+                    start_pos += PRODUCT_ID_LEN;
+                    strncpy(ver->version_no, &recvbuf[start_pos],
+                           VERSION_NUM_LEN);
+                    ver->version_no[VERSION_NUM_LEN] = '\0';
+
+                    /* note field */
+                    start_pos += VERSION_NUM_LEN;
+                    strncpy(ver->note, &recvbuf[start_pos], MAX_NOTE_LEN);
+                    ver->note[strlen(ver->note)] = '\0';
+                    printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
+                    strncpy(sendbuf,BACKUP_RESPONSE,RESPONSE_MARK_LEN);
+                    send(connfd, sendbuf, strlen(sendbuf), 0);
+                    memset(sendbuf, 0, MAXLINE);
+                }
+                else if(recvbuf[2] == '1')
+                {
+                    printf("we reach here to save file\n");
+                    FILE *fp = fopen("/home/luckybear/Documents/test.c", "w");
+                    if(NULL == fp)
+                    {
+                        printf("Can Not Open To Write\n");
+                        exit(1);
+                    }
+                    memset(file_buffer, 0, FILE_BUFFER_LEN);
+
+                    strncpy(file_buffer, &recvbuf[3], strlen(&recvbuf[3]));
+
+                    printf("the file buffer is %s\n", file_buffer);
+                    fputs(file_buffer, fp);
+                    close(fp);
+                    memset(file_buffer, 0, FILE_BUFFER_LEN);
+                }
+            }
         }
     }
 }

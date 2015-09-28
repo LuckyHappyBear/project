@@ -30,4 +30,10 @@
 #define DELETE_RESPONSE   "03"
 #define RECOVER_RESPONSE  "04"
 
+/* field length */
+#define IMSI_LEN 15
+#define PRODUCT_ID_LEN 8
+#define VERSION_NUM_LEN 14
+#define MAX_NOTE_LEN 60
+
 #endif

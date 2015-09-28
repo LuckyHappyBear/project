@@ -19,12 +19,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_h/message.h"
+#include "../socket_public/message.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define CHECK_MARK_LEN 2 /* the length of the check message mark */
-#define IMSI_LEN 15   /* the IMSI length*/
 #define REMAIN_FIELD_LEN 2 /* the length remian space field */
 
 int cgi_check(char *IMSI, char *IP)
