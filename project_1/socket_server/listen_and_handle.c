@@ -199,13 +199,29 @@ int main()
                 memcpy(&sendbuf[4 + length], &ver_list[1], length);
                 memcpy(&sendbuf[4 + 2 * length], &ver_list[2], length);
                 printf("The sendbuf is %s\n",sendbuf);
-                send(connfd, sendbuf, 4+length*3, 0);
+                send(connfd, sendbuf, 4 + length * 3, 0);
+                memset(sendbuf, 0, MAXLINE);
             }
             else if (strncmp(recvbuf, DELETE_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int id;
                 memcpy(&id, &recvbuf[2], sizeof(int));
                 printf("the id is %d\n",id);
+
+
+                /* we do delete operations here */
+
+
+                strncpy(sendbuf, DELETE_RESPONSE, RESPONSE_MARK_LEN);
+                /* means delete successful */
+                sendbuf[2] = '1';
+                printf("the sendbuf is %s\n", sendbuf);
+                send(connfd, sendbuf, strlen(sendbuf), 0);
+                memset(sendbuf, 0, MAXLINE);
+            }
+            else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
+            {
+                
             }
         }
     }

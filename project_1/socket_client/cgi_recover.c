@@ -1,9 +1,9 @@
 /*************************************************************************
  Copyright (C), 2015, TP-LINK TECHNOLOGIES CO., LTD.
 
- File Name:   cgi_delete.c
+ File Name:   cgi_recover.c
 
- Description: we delete backup version user choosed in this file
+ Description: we recover a backup version from the server
 
  Author:      hexiong
 
@@ -23,12 +23,11 @@
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
-#define DELETE_MARK_LEN 2 /* the length of the check message mark */
+#define RECOVER_MARK_LEN 2 /* the length of the check message mark */
 
-int cgi_delete(int id, char *IP)
+int cgi_recover(int id, char *IP)
 {
     int sockfd;
-    int return_code;
     struct sockaddr_in servaddr;
     char sendline[MAXLINE], recvline[MAXLINE];
 
@@ -38,7 +37,7 @@ int cgi_delete(int id, char *IP)
 
     if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
-        perror("cgi_delete:Problem in creating the socket\n");
+        perror("cgi_recover:Problem in creating the socket\n");
         exit(1);
     }
 
@@ -51,43 +50,32 @@ int cgi_delete(int id, char *IP)
     /* connection of the client to the socket */
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
-        perror("cgi_delete:Problem in connecting to the server");
+        perror("cgi_recover:Problem in connecting to the server");
         exit(2);
     }
 
-    /* send delete message, request to delete backup version which id is id*/
-    strncpy(sendline, CGI_DELETE, DELETE_MARK_LEN);
-    memcpy(&sendline[DELETE_MARK_LEN], &id, sizeof(int));
+    strncpy(sendline, CGI_RECOVER, RECOVER_MARK_LEN);
+    memcpy(&sendline[RECOVER_MARK_LEN],&id, sizeof(int));
     send(sockfd, sendline, strlen(sendline), 0);
 
     while (1)
     {
+        printf("we reach here or not\n");
         if (recv(sockfd, recvline, MAXLINE, 0) < 0)
         {
-            perror("cgi_delete:The server terminated prematurely\n");
-            return -1;
+            perror("cgi_recover:The server terminated prematurely\n");
+            exit(3);
         }
         else
         {
             /* server response this request */
-            if (strncmp(recvline, DELETE_RESPONSE, DELETE_MARK_LEN) == 0)
+            if (strncmp(recvline, RECOVER_RESPONSE, RECOVER_MARK_LEN) == 0)
             {
-                if (recvline[2] == '1')
-                {
-                    /* delete successful */
-                    printf("delete successful\n");
-                    return 1;
-                }
-                else
-                {
-                    /* delete failed */
-                    return -1;
-                }
+
             }
             else
             {
-                /* delete failed(the communication protocol between server
-                   and client has problem) */
+                /* server doesn't response this request */
                 return -1;
             }
         }
@@ -96,7 +84,6 @@ int cgi_delete(int id, char *IP)
 
 int main()
 {
-    cgi_delete(20,"127.0.0.1");
+    cgi_recover(20,"127.0.0.1");
     return 0;
 }
-
