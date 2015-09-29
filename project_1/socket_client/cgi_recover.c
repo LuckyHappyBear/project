@@ -24,11 +24,13 @@
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define RECOVER_MARK_LEN 2 /* the length of the check message mark */
+#define FILE_BUFFER_LEN 4000 /* the length of the file buffer */
 
 int cgi_recover(int id, char *IP)
 {
     int sockfd;
     struct sockaddr_in servaddr;
+    char file_buffer[FILE_BUFFER_LEN];
     char sendline[MAXLINE], recvline[MAXLINE];
 
     /* initialize the send buffer and receive buffer */
@@ -71,7 +73,39 @@ int cgi_recover(int id, char *IP)
             /* server response this request */
             if (strncmp(recvline, RECOVER_RESPONSE, RECOVER_MARK_LEN) == 0)
             {
-
+                printf("The recvline is %s\n", recvline);
+                char file_path[512] = "/home/luckybear/Documents/test1.txt";
+                FILE *fp = fopen(file_path, "w");
+                /*the third bit is 1 means file transfer continue
+                  0 means file transfer finish*/
+                int length = 0;
+                memset(file_buffer, 0, FILE_BUFFER_LEN);
+                while((length = recv(sockfd, file_buffer, FILE_BUFFER_LEN, 0)) > 0)
+                {
+                    if (fwrite(file_buffer, sizeof(char), length, fp) < length)
+                    {
+                        printf("File Write failed.\n");
+                        break;
+                    }
+                }
+                fclose(fp);
+                /*if (recvline[2] == '1')
+                {
+                    strncpy(file_buffer, &recvline[3], FILE_BUFFER_LEN);
+                    if (fwrite(file_buffer, sizeof(char), strlen(file_buffer),
+                               fp) < strlen(file_buffer))
+                    {
+                        printf("Write file failed\n");
+                    }
+                    memset(recvline, 0, MAXLINE);
+                    memset(file_buffer, 0, MAXLINE);
+                }
+                else
+                {
+                    printf("we reach here and finished?\n");
+                    fclose(fp);
+                    return 1;
+                }*/
             }
             else
             {

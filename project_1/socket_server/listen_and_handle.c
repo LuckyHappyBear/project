@@ -221,7 +221,40 @@ int main()
             }
             else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
-                
+                int id;
+                /* get the id in database */
+                memcpy(&id, &recvbuf[2], sizeof(int));
+
+                memset(file_path, 0, 512);
+                memset(file_buffer, 0, FILE_BUFFER_LEN);
+                strcpy(file_path, "/home/luckybear/test2.txt");
+
+                FILE *fp = fopen(file_path,"r");
+                if(NULL == fp)
+                {
+                    printf("File  Not Found\n");
+                }
+                else
+                {
+                    int length = 0;
+                    memset(file_buffer, 0, FILE_BUFFER_LEN);
+                    while ((length = fread(file_buffer, sizeof(char),
+                                          FILE_BUFFER_LEN, fp)) > 0)
+                    {
+                        if (send(connfd, file_buffer, length, 0) < 0)
+                        {
+                            perror("Send File Failed");
+                            break;
+                        }
+                        memset(file_buffer, 0,FILE_BUFFER_LEN);
+                    }
+                    fclose(fp);
+                    /*memset(sendbuf, 0, MAXLINE);
+                    strncpy(sendbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN);
+                    sendbuf[2] = '0';
+                    send(connfd, sendbuf, strlen(sendbuf), 0);
+                    memset(sendbuf, 0, MAXLINE);*/
+                }
             }
         }
     }
