@@ -1,0 +1,9 @@
+1.when we use socket transfer struct,we should according to these steps:
+memcpy(&sendbuf[pos],&a_struct,the size of the struct);
+send(connection descriptor, sendbuf, length, 0);
+//length can not be replace by strlen(sendbuf),if we replace this,we can't receive what we want
+
+2.fopen() <-------> fclose()
+//we can't replace fclose with close,otherwise we can't write file right now
+
+

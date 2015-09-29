@@ -19,7 +19,7 @@
 /* client message */
 #define CGI_CHECK   "00"
 #define CGI_BACKUP  "01"
-#define CGI_GETLISE "02"
+#define CGI_GETLIST "02"
 #define CGI_DELETE  "03"
 #define CGI_RECOVER "04"
 
