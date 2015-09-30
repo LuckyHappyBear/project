@@ -135,48 +135,21 @@ int main()
                 }
                 else if(recvbuf[2] == '1')
                 {
-                    printf("The recvbuf is %s\n", recvbuf);
-                    printf("the first recvbuf length is %d\n", strlen(recvbuf));
-                    char file_path[512] = "/home/luckybear/Documents/test2.txt";
-                    FILE *fp = fopen(file_path, "w");
-                    int length = 0;
-                    memset(recvbuf, 0, MAXLINE);
+                    printf("we reach here to save file\n");
                     memset(file_buffer, 0, FILE_BUFFER_LEN);
-                    while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
+
+                    strncpy(file_buffer, &recvbuf[3], strlen(&recvbuf[3]));
+
+                    printf("the file buffer is %s\n", file_buffer);
+                    FILE *fp = fopen("/home/luckybear/Documents/test", "w");
+                    if(NULL == fp)
                     {
-                        printf("1The length is %d\n",strlen(recvbuf));
-                        printf("The recvline is %s\n", recvbuf);
-                        if (recvbuf[0] == '1')
-                        {
-                            strncpy(file_buffer, &recvbuf[1], length - 1);
-                            printf("The file length we will write is %s\nthe length is %d\n",file_buffer, length);
-                            if (fwrite(file_buffer, sizeof(char), strlen(file_buffer), fp) < (length - 1))
-                            {
-                                printf("File Write failed.\n");
-                                break;
-                            }
-                            memset(recvbuf, 0, MAXLINE);
-                            memset(file_buffer, 0, FILE_BUFFER_LEN);
-                            memset(sendbuf, 0, MAXLINE);
-                            printf("we reach here to send something\n");
-                            sendbuf[0] = '1';
-                            printf("the sendline is %s\n", sendbuf);
-                            send(connfd, sendbuf, MAXLINE, 0);
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        printf("Can Not Open To Write\n");
+                        exit(1);
                     }
-                    if(length < 0)
-                    {
-                        perror("Transfer error");
-                    }
-                    else
-                    {
-                        printf("we reach here?\n");
-                        fclose(fp);
-                    }
+                    fputs(file_buffer, fp);
+                    fclose(fp);
+                    memset(file_buffer, 0, FILE_BUFFER_LEN);
                 }
             }
             else if (strncmp(recvbuf, GETLIST_RESPONSE, RESPONSE_MARK_LEN) == 0)

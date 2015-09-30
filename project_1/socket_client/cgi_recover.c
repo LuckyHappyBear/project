@@ -59,14 +59,14 @@ int cgi_recover(int id, char *IP)
     strncpy(sendline, CGI_RECOVER, RECOVER_MARK_LEN);
     memcpy(&sendline[RECOVER_MARK_LEN],&id, sizeof(int));
     send(sockfd, sendline, strlen(sendline), 0);
-
+ 
     while (1)
     {
         printf("we reach here or not\n");
         if (recv(sockfd, recvline, MAXLINE, 0) < 0)
         {
             perror("cgi_recover:The server terminated prematurely\n");
-            exit(3);
+            return -1;
         }
         else
         {
@@ -74,42 +74,55 @@ int cgi_recover(int id, char *IP)
             if (strncmp(recvline, RECOVER_RESPONSE, RECOVER_MARK_LEN) == 0)
             {
                 printf("The recvline is %s\n", recvline);
+                printf("the first recvline length is %d\n", strlen(recvline));
                 char file_path[512] = "/home/luckybear/Documents/test1.txt";
                 FILE *fp = fopen(file_path, "w");
                 /*the third bit is 1 means file transfer continue
                   0 means file transfer finish*/
                 int length = 0;
+                memset(recvline, 0, MAXLINE);
                 memset(file_buffer, 0, FILE_BUFFER_LEN);
-                while((length = recv(sockfd, file_buffer, FILE_BUFFER_LEN, 0)) > 0)
+                while ((length = recv(sockfd, recvline, MAXLINE, 0)) > 0)
                 {
-                    if (fwrite(file_buffer, sizeof(char), length, fp) < length)
+                    printf("1The length is %d\n",strlen(recvline));
+                    printf("The recvline is %s\n", recvline);
+                    if (recvline[0] == '1')
                     {
-                        printf("File Write failed.\n");
+                        strncpy(file_buffer, &recvline[1], length - 1);
+                        printf("The file length we will write is %s\nthe length is %d\n",file_buffer, length);
+                        if (fwrite(file_buffer, sizeof(char), strlen(file_buffer), fp) < (length - 1))
+                        {
+                            printf("File Write failed.\n");
+                            break;
+                        }
+                        memset(recvline, 0, MAXLINE);
+                        memset(file_buffer, 0, FILE_BUFFER_LEN);
+                        memset(sendline, 0, MAXLINE);
+                        printf("we reach here to send something\n");
+                        sendline[0] = '1';
+                        printf("the sendline is %s\n", sendline);
+                        send(sockfd, sendline, MAXLINE, 0);
+                    }
+                    else
+                    {
                         break;
                     }
                 }
-                fclose(fp);
-                /*if (recvline[2] == '1')
+                if(length < 0)
                 {
-                    strncpy(file_buffer, &recvline[3], FILE_BUFFER_LEN);
-                    if (fwrite(file_buffer, sizeof(char), strlen(file_buffer),
-                               fp) < strlen(file_buffer))
-                    {
-                        printf("Write file failed\n");
-                    }
-                    memset(recvline, 0, MAXLINE);
-                    memset(file_buffer, 0, MAXLINE);
+                    return -1;
                 }
                 else
                 {
-                    printf("we reach here and finished?\n");
+                    printf("we reach here?\n");
                     fclose(fp);
                     return 1;
-                }*/
+                }
             }
             else
             {
                 /* server doesn't response this request */
+                printf("we reach here and exit the program\n");
                 return -1;
             }
         }

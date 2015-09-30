@@ -25,7 +25,7 @@
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define BACKUP_MARK_LEN 2 /* the length of the check message mark */
-#define FILE_BUFFER_LEN 4000 /* the size of the file buffer */
+#define FILE_BUFFER_SIZE 4000 /* the size of the file buffer */
 
 int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_path)
 {
@@ -62,7 +62,13 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
         exit(2);
     }
 
-
+    /*FILE *fp = fopen(file_path, "r");
+    fseek(fp, 0L, SEEK_END);
+    file_len = ftell(fp);
+    fclose(fp);
+    sprintf(file_size, "%d", file_len);
+    printf("the file size is %s\n",file_size);
+    printf("the file length is %d\n",file_len);*/
     strncpy(sendline, CGI_BACKUP, BACKUP_MARK_LEN);
     /* the third bit used to ditinguish data package or information package */
     sendline[2] = '0';
@@ -90,7 +96,6 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     printf("the sendline is %s\n",sendline);
     memset(sendline, 0, MAXLINE);
     //printf("the length is %s\n", &sendline[start_pos]);
-    file_path = "/home/luckybear/test2.txt";
     while (1)
     {
         printf("we reach here or not\n");
@@ -98,77 +103,42 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
         {
             if (strncmp(recvline, BACKUP_RESPONSE, BACKUP_MARK_LEN) == 0)
             {
-                memset(sendline, 0, MAXLINE);
-                strncpy(sendline, CGI_BACKUP, BACKUP_MARK_LEN);
-                sendline[2] = '1';
-                printf("The sendline is %s\n", sendline);
-                send(sockfd, sendline, strlen(sendline), 0);
-                memset(sendline, 0, MAXLINE);
-                memset(recvline, 0, MAXLINE);
-                FILE *fp = fopen(file_path,"r");
-                if(NULL == fp)
+                FILE *fp = fopen(file_path, "r");
+                if (NULL == fp)
                 {
-                    printf("File Not Found\n");
+                    printf("File is not found\n");
                 }
                 else
                 {
+                    memset(file_buffer, 0, FILE_BUFFER_SIZE);
                     int length = 0;
-                    memset(file_buffer, 0, FILE_BUFFER_LEN);
-                    memset(sendline, 0, MAXLINE);
-                    strncpy(sendline, BACKUP_RESPONSE, BACKUP_MARK_LEN);
-                    send(sockfd, sendline, strlen(sendline), 0);
-                    memset(sendline, 0, MAXLINE);
-                    while (!feof(fp))
+                    while ((length = fread(file_buffer, sizeof(char),
+                                           FILE_BUFFER_SIZE, fp)) > 0)
                     {
-                        if ((length = fread(file_buffer, sizeof(char),
-                                              FILE_BUFFER_LEN - 1, fp)) > 0)
+                        strncpy(sendline, "011", 3);
+                        strncpy(&sendline[3], file_buffer,
+                                strlen(file_buffer));
+                        printf("the content is %s\n",sendline);
+                        if (send(sockfd, sendline, strlen(sendline), 0) < 0)
                         {
-                            sendline[0] = '1';
-                            strncpy(&sendline[1], file_buffer, length);
-                            printf("The length is %d\n",strlen(sendline));
-                            printf("The sendbuffer is %s\n", sendline);
-                            if (send(sockfd, sendline, strlen(sendline), 0) < 0)
-                            {
-                                perror("Send File Failed");
-                                break;
-                            }
-                            else
-                            {
-                                printf("we reach here to wait for response\n");
-                                memset(recvline, 0, MAXLINE);
-                                while (recv(sockfd, recvline, MAXLINE, 0) > 0)
-                                {
-                                    printf("did we reveice the response\n");
-                                    printf("The recvbuf content is %s\n",recvline);
-                                    if(recvline[0] == '1')
-                                    {
-                                        printf("we receive client's response\n");
-                                        break;
-                                    }
-                                }
-                            }
-                            printf("we continue send here\n");
-                            memset(file_buffer, 0,FILE_BUFFER_LEN);
-                            memset(sendline, 0, MAXLINE);
+                            printf("send file failed\n");
+                            break;
                         }
+                        memset(file_buffer, 0, FILE_BUFFER_SIZE);
+                        memset(sendline, 0, MAXLINE);
                     }
                     fclose(fp);
-                    memset(sendline, 0, MAXLINE);
-                    sendline[0] = '0';
-                    sendline[1] = '\0';
-                    send(sockfd, sendline, strlen(sendline), 0);
-                    memset(sendline, 0, MAXLINE);
-                    printf("we finished here\n");
+                    printf("transfer successful\n");
                 }
-
-                return 1;
+                return return_code;
             }
             else
             {
                 /* server doesn't response this request */
+                return_code = -1;
                 memset(&sendline, 0, MAXLINE);
                 memset(&recvline, 0, MAXLINE);
-                return -1;
+                return return_code;
             }
         }
         else
