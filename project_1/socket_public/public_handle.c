@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include "public_handle.h"
+#include "../socket_h/public_handle.h"
 
 void get_version_no(char *time_buffer)
 {

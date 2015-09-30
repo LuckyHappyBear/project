@@ -19,8 +19,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_public/message.h"
-#include "../socket_public/public_handle.h"
+#include "../socket_h/message.h"
+#include "../socket_h/public_handle.h"
+#include "../socket_h/cgi.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
@@ -105,6 +106,19 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                 send(sockfd, sendline, strlen(sendline), 0);
                 memset(sendline, 0, MAXLINE);
                 memset(recvline, 0, MAXLINE);
+
+
+                while (recv(sockfd, recvline, MAXLINE, 0) > 0)
+                {
+                    printf("did we reveice the response\n");
+                    printf("The recvbuf content is %s\n",recvline);
+                    if(recvline[0] == '1')
+                    {
+                        printf("we receive client's response\n");
+                        break;
+                    }
+                }
+
                 FILE *fp = fopen(file_path,"r");
                 if(NULL == fp)
                 {
@@ -114,9 +128,6 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                 {
                     int length = 0;
                     memset(file_buffer, 0, FILE_BUFFER_LEN);
-                    memset(sendline, 0, MAXLINE);
-                    strncpy(sendline, BACKUP_RESPONSE, BACKUP_MARK_LEN);
-                    send(sockfd, sendline, strlen(sendline), 0);
                     memset(sendline, 0, MAXLINE);
                     while (!feof(fp))
                     {

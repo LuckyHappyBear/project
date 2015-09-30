@@ -21,8 +21,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-#include "../socket_public/message.h"
-#include "../socket_public/public_handle.h"
+#include "../socket_h/message.h"
+#include "../socket_h/public_handle.h"
 
 #define MAXLINE 4096 /* max buffer length */
 #define SERV_PORT 3000 /* port number */
@@ -132,6 +132,7 @@ int main()
                     strncpy(sendbuf,BACKUP_RESPONSE,RESPONSE_MARK_LEN);
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
+                    memset(recvbuf, 0, MAXLINE);
                 }
                 else if(recvbuf[2] == '1')
                 {
@@ -141,7 +142,14 @@ int main()
                     FILE *fp = fopen(file_path, "w");
                     int length = 0;
                     memset(recvbuf, 0, MAXLINE);
+                    memset(sendbuf, 0, MAXLINE);
                     memset(file_buffer, 0, FILE_BUFFER_LEN);
+                    sendbuf[0] = '1';
+                    sendbuf[1] = '\0';
+                    send(connfd, sendbuf, strlen(sendbuf), 0);
+                    memset(sendbuf, 0, MAXLINE);
+                    memset(recvbuf, 0, MAXLINE);
+                    printf("The recvbuf is %s\n",recvbuf);
                     while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
                     {
                         printf("1The length is %d\n",strlen(recvbuf));

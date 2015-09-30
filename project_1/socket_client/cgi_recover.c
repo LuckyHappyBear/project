@@ -19,7 +19,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_public/message.h"
+#include "../socket_h/cgi.h"
+#include "../socket_h/message.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
@@ -59,7 +60,7 @@ int cgi_recover(int id, char *IP)
     strncpy(sendline, CGI_RECOVER, RECOVER_MARK_LEN);
     memcpy(&sendline[RECOVER_MARK_LEN],&id, sizeof(int));
     send(sockfd, sendline, strlen(sendline), 0);
- 
+
     while (1)
     {
         printf("we reach here or not\n");
