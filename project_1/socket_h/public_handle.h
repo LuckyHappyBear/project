@@ -20,16 +20,24 @@
 
 struct version_info
 {
-    int id;
-    char imsi[IMSI_LEN + 1];
-    char product_id[PRODUCT_ID_LEN + 1];
-    char version_no[VERSION_NUM_LEN + 1];
-    char note[MAX_NOTE_LEN + 1];
+    int id;                                         /* the id of the backup information in database */
+    char imsi[IMSI_LEN + 1];                        /* International Mobile Subscriber Identification Number */
+    char product_id[PRODUCT_ID_LEN + 1];            /* the id of the product */
+    char version_no[VERSION_NUM_LEN + 1];           /* the version number of this backup */
+    char note[MAX_NOTE_LEN + 1];                    /* the note user input */
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+/******************************************************************************
+ Function:     get_version_no
+ Description:  we user this function to give a config version number
+ Input:        time_buffer:time_buffer will store the version number
+ Output:       NONE
+ Return:       NONE
+ Others:       NONE
+*******************************************************************************/
 void get_version_no(char *time_buffer);
 
 int is_folder_exist(char *path);

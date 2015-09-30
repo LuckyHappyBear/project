@@ -19,15 +19,63 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+/******************************************************************************
+ Function:     cgi_check
+ Description:  check the space user used in server
+ Input:        IMSI:International Mobile Subscriber Identification Number
+               IP:the server IP
+ Output:       NONE
+ Return:       the amount of the backups
+ Others:       NONE
+*******************************************************************************/
 int cgi_check(char *IMSI, char *IP);
 
+/******************************************************************************
+ Function:     cgi_getlist
+ Description:  get the the user's  backup list aimed at a product
+ Input:        IMSI:International Mobile Subscriber Identification Number
+               IP:the server IP
+               product_id: the id of the product
+ Output:       NONE
+ Return:       the list of the backup aimed at the product
+ Others:       NONE
+*******************************************************************************/
 int cgi_getlist(char *IMSI, char *IP, char *product_id);
 
+/******************************************************************************
+ Function:     cgi_backup
+ Description:  backup a local config to server
+ Input:        IMSI:International Mobile Subscriber Identification Number
+               IP:the server IP
+               product_id: the id of the product
+               note: the note user input
+               file_path: the path of the config
+ Output:       NONE
+ Return:       1:successfule -1:failed
+ Others:       NONE
+*******************************************************************************/
 int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_path);
 
+/******************************************************************************
+ Function:     cgi_recover
+ Description:  pull a backup from server to local
+ Input:        id: the id of this record in database
+               IP:the server IP
+ Output:       NONE
+ Return:       1:recover successfully -1:recover failed
+ Others:       NONE
+*******************************************************************************/
 int cgi_recover(int id, char *IP);
 
+/******************************************************************************
+ Function:     cgi_delete
+ Description:  delete a backup from server
+ Input:        id: the id of this record in database
+               IP:the server IP
+ Output:       NONE
+ Return:       1:delete successful -1:delete failed
+ Others:       NONE
+*******************************************************************************/
 int cgi_delete(int id, char *IP);
 
 #ifdef __cplusplus

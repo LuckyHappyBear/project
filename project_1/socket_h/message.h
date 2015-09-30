@@ -17,23 +17,23 @@
 #define _MESSAGE_H
 
 /* client message */
-#define CGI_CHECK   "00"
-#define CGI_BACKUP  "01"
-#define CGI_GETLIST "02"
-#define CGI_DELETE  "03"
-#define CGI_RECOVER "04"
+#define CGI_CHECK   "00"         /* check message */
+#define CGI_BACKUP  "01"         /* backup message */
+#define CGI_GETLIST "02"         /* getlist message */
+#define CGI_DELETE  "03"         /* delete message */
+#define CGI_RECOVER "04"         /* recover message */
 
 /* server message */
-#define CHECK_RESPONSE    "00"
-#define BACKUP_RESPONSE   "01"
-#define GETLIST_RESPONSE  "02"
-#define DELETE_RESPONSE   "03"
-#define RECOVER_RESPONSE  "04"
+#define CHECK_RESPONSE    "00"   /* check response */
+#define BACKUP_RESPONSE   "01"   /* backup response */
+#define GETLIST_RESPONSE  "02"   /* getlist response */
+#define DELETE_RESPONSE   "03"   /* delete response */
+#define RECOVER_RESPONSE  "04"   /* recover response */
 
 /* field length */
-#define IMSI_LEN 15
-#define PRODUCT_ID_LEN 8
-#define VERSION_NUM_LEN 14
-#define MAX_NOTE_LEN 60
+#define IMSI_LEN 15              /* the length of IMSI */
+#define PRODUCT_ID_LEN 8         /* the length of the product id*/
+#define VERSION_NUM_LEN 14       /* the length of the version number */
+#define MAX_NOTE_LEN 60          /* the max length of the note user can input */
 
 #endif

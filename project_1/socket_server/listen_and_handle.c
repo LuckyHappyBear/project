@@ -76,6 +76,7 @@ int main()
 
         while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
         {
+            /* receive check message */
             if (strncmp(recvbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int remain = 10;
@@ -92,6 +93,7 @@ int main()
                 memset(sendbuf, 0, MAXLINE);
                 memset(recvbuf, 0, MAXLINE);
             }
+            /* receive backup message */
             else if (strncmp(recvbuf, BACKUP_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 /* receive the backup request from client */
@@ -187,6 +189,7 @@ int main()
                     }
                 }
             }
+            /* receive getlist message */
             else if (strncmp(recvbuf, GETLIST_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int length = sizeof(struct version_info);
@@ -237,6 +240,7 @@ int main()
                 send(connfd, sendbuf, 4 + length * 3, 0);
                 memset(sendbuf, 0, MAXLINE);
             }
+            /* receive delete message */
             else if (strncmp(recvbuf, DELETE_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int id;
@@ -254,6 +258,7 @@ int main()
                 send(connfd, sendbuf, strlen(sendbuf), 0);
                 memset(sendbuf, 0, MAXLINE);
             }
+            /* receive recover message */
             else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int id;
