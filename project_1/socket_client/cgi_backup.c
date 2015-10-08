@@ -47,7 +47,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
         perror("cgi_backup:Problem in creating the socket\n");
-        exit(1);
+        return -1;
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -60,7 +60,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
         perror("cgi_backup:Problem in connecting to the server");
-        exit(2);
+        return -1;
     }
 
 
@@ -91,7 +91,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     printf("the sendline is %s\n",sendline);
     memset(sendline, 0, MAXLINE);
     //printf("the length is %s\n", &sendline[start_pos]);
-    file_path = "/home/luckybear/test2.txt";
+    file_path = "/home/luckybear/alpha.tar";
     while (1)
     {
         printf("we reach here or not\n");
@@ -107,7 +107,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                 memset(sendline, 0, MAXLINE);
                 memset(recvline, 0, MAXLINE);
 
-
+                /* wait for response */
                 while (recv(sockfd, recvline, MAXLINE, 0) > 0)
                 {
                     printf("did we reveice the response\n");
@@ -119,18 +119,36 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                     }
                 }
 
-                FILE *fp = fopen(file_path,"r");
+                FILE *fp = fopen(file_path,"rb");
                 if(NULL == fp)
                 {
                     printf("File Not Found\n");
                 }
                 else
                 {
+                    /* get the total length of the file */
+                    fseek(fp, 0, SEEK_SET);
+                    fseek(fp, 0, SEEK_END);
+                    long total_bytes = ftell(fp);
+                    printf("The total length of the file is %ld\n",total_bytes);
+                    fseek(fp, 0, SEEK_SET);
+
                     int length = 0;
+                    /* the length we have read */
+                    int read_len = 0;
+
+                    /* the length we have not read */
+                    int left_len = total_bytes;
+
                     memset(file_buffer, 0, FILE_BUFFER_LEN);
                     memset(sendline, 0, MAXLINE);
-                    while (!feof(fp))
+                    while (1)
                     {
+                        if ((left_len <= 0) || (read_len >= total_bytes))
+                        {
+                            break;
+                        }
+
                         if ((length = fread(file_buffer, sizeof(char),
                                               FILE_BUFFER_LEN - 1, fp)) > 0)
                         {

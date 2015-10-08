@@ -140,7 +140,7 @@ int main()
                 {
                     printf("The recvbuf is %s\n", recvbuf);
                     printf("the first recvbuf length is %d\n", strlen(recvbuf));
-                    char file_path[512] = "/home/luckybear/Documents/test2.txt";
+                    char file_path[512] = "/home/luckybear/Documents/alpha.tar";
                     FILE *fp = fopen(file_path, "w");
                     int length = 0;
                     memset(recvbuf, 0, MAXLINE);
@@ -151,7 +151,6 @@ int main()
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
                     memset(recvbuf, 0, MAXLINE);
-                    printf("The recvbuf is %s\n",recvbuf);
                     while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
                     {
                         printf("1The length is %d\n",strlen(recvbuf));

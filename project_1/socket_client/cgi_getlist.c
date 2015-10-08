@@ -29,7 +29,7 @@
 #define GETLIST_MARK_LEN 2 /* the length of the check message mark */
 #define FILE_BUFFER_SIZE 4000 /* the size of the file buffer */
 
-int cgi_getlist(char *IMSI, char *IP, char *product_id)
+int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ver_list)
 {
     int sockfd;
     int start_pos;          /* count every field's start position */
@@ -94,23 +94,23 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id)
                 char list[2];
                 strncpy(list, &recvline[2], 2);
                 list_num = atoi(list);
-                struct version_info *ver_list = malloc(list_num * sizeof(struct version_info));
+                (*ver_list) = malloc(list_num * sizeof(struct version_info));
                 start_pos = 4;
                 printf("The list_num is %d\n",list_num);
 
                 for (i = 0; i < list_num; i ++)
                 {
-                    memcpy(&ver_list[i], &recvline[start_pos], length);
+                    memcpy(&(*ver_list)[i], &recvline[start_pos], length);
                     start_pos += length;
                 }
 
 
 
                 /* we neet to release this space in somewhere,do not forget */
-                for(i = 0; i < list_num; i ++)
-                {
-                    printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver_list[i].id, ver_list[i].imsi,ver_list[i].product_id, ver_list[i].version_no, ver_list[i].note);
-                }
+                //for(i = 0; i < list_num; i ++)
+                //{
+                //    printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",(*ver_list)[i].id, (*ver_list)[i].imsi,(*ver_list)[i].product_id, (*ver_list)[i].version_no, (*ver_list)[i].note);
+                //}
                 return list_num;
             }
             else
@@ -132,6 +132,20 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id)
 
 int main()
 {
-    cgi_getlist("123456789871111","127.0.0.1","73000001");
+    struct version_info *p = NULL;
+    int num = cgi_getlist("123456789871111","127.0.0.1","73000001", &p);
+    if ( NULL == p )
+    {
+        puts("pointer NULL");
+    }
+    else
+    {
+        puts("pointer not NULL");
+    }
+    int i;
+    for(i = 0; i < num; i ++)
+    {
+    printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",p[i].id, p[i].imsi,p[i].product_id, p[i].version_no, p[i].note);
+    }
     return 0;
 }

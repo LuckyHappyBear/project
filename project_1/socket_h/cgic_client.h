@@ -12,6 +12,7 @@
 --------------------------------------
 
 *************************************************************************/
+#include "public_handle.h"
 
 #ifndef _CGI_H
 #define _CGI_H
@@ -40,7 +41,7 @@ int cgi_check(char *IMSI, char *IP);
  Return:       the list of the backup aimed at the product
  Others:       NONE
 *******************************************************************************/
-int cgi_getlist(char *IMSI, char *IP, char *product_id);
+int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ver_list);
 
 /******************************************************************************
  Function:     cgi_backup
