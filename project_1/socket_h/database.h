@@ -59,7 +59,6 @@ int add (MYSQL *conn_ptr,char *IMSI,char *version_no,char *product_id,char *note
  Function:     query
  Description:  pull a backup from server to local
  Input:        id: the id of this record in database
-            
  Output:       NONE
  Return:       1:recover successfully 0:recover failed
  Others:       NONE

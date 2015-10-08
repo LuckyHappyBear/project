@@ -70,3 +70,26 @@ int is_folder_exist(char *path)
     closedir(dp);
     return 1;
 }
+
+char *cons_file_name(char *IMSI, char *product_id, char *version_no)
+{
+    int start_pos = 0;
+    char file_name[512];
+    memset(file_name, 0, 512);
+
+    strncpy(file_name, IMSI, strlen(IMSI));
+    start_pos += strlen(IMSI);
+
+    file_name[start_pos] = '_';
+    start_pos += 1;
+
+    strncpy(&file_name[start_pos], product_id, strlen(product_id));
+    start_pos += strlen(product_id);
+
+    file_name[start_pos] = '_';
+    start_pos += 1;
+
+    strncpy(&file_name[start_pos], version_no, strlen(version_no));
+
+    return file_name;
+}

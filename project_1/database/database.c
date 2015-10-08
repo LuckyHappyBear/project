@@ -45,12 +45,12 @@ MYSQL *mysql_connect_ptr()
     conn_ptr = mysql_real_connect(conn_ptr,IP,DBUSER,DBPASSWORD,DB,0,NULL,0);
     if (conn_ptr)
     {
-        return conn_ptr;  
+        return conn_ptr;
     }
     else
     {
         return NULL;
-    }    
+    }
 }
 
 
@@ -58,9 +58,9 @@ MYSQL *mysql_connect_ptr()
 struct version_info *getList ( MYSQL *conn_ptr,char *IMSI,char *product_id )
 {
 
-	MYSQL_RES *res_ptr;  
-    MYSQL_ROW sqlrow;  
-    MYSQL_FIELD *fd;  
+	MYSQL_RES *res_ptr;
+    MYSQL_ROW sqlrow;
+    MYSQL_FIELD *fd;
 	int res ,i ,j;
 	int count = 0;
 	int mark;
@@ -77,24 +77,24 @@ struct version_info *getList ( MYSQL *conn_ptr,char *IMSI,char *product_id )
 	strcat(sql,product_id);
 	strcat(sql,"'");
 
-    res = mysql_query(conn_ptr,sql); //查询语句  
-    if (res) {         
-        printf("SELECT error:%s\n",mysql_error(conn_ptr));     
-    } else {        
-        res_ptr = mysql_store_result(conn_ptr);             //取出结果集  
+    res = mysql_query(conn_ptr,sql); //查询语句
+    if (res) {
+        printf("SELECT error:%s\n",mysql_error(conn_ptr));
+    } else {
+        res_ptr = mysql_store_result(conn_ptr);             //取出结果集
         if(res_ptr)
-        {        
+        {
             j = mysql_num_fields(res_ptr);  //j is the field in a table
             ver_list = malloc((unsigned long)mysql_num_rows(res_ptr) * sizeof(struct version_info));
 
-            while((sqlrow = mysql_fetch_row(res_ptr)))  {   //依次取出记录  
+            while((sqlrow = mysql_fetch_row(res_ptr)))  {   //依次取出记录
            		mark = count++;
             	ver_list[mark].id = atoi(sqlrow[0]);
             	strcpy(ver_list[mark].imsi,sqlrow[1]);
             	strcpy(ver_list[mark].product_id,sqlrow[2]);
             	strcpy(ver_list[mark].note,sqlrow[3]);
-            }  
-       
+            }
+
             if (mysql_errno(conn_ptr))
             {
                 fprintf(stderr,"Retrive error:s\n",mysql_error(conn_ptr));
@@ -120,16 +120,16 @@ int add (MYSQL *conn_ptr,char *IMSI,char *version_no,char *product_id,char *note
 	strcat(sql,file_path);
 	strcat(sql,"')");
 	printf("\n%s\n",sql);
-	
-    res = mysql_query(conn_ptr,sql);   //可以把insert语句替换成delete或者update语句，都一样的  
- 
-    if (!res) {     //输出受影响的行数  
+
+    res = mysql_query(conn_ptr,sql);   //可以把insert语句替换成delete或者update语句，都一样的
+
+    if (!res) {     //输出受影响的行数
         printf("Inserted %lu rows\n",(unsigned long)mysql_affected_rows(conn_ptr));
         return 1;
-    }  else {       //打印出错误代码及详细信息  
+    }  else {       //打印出错误代码及详细信息
         fprintf(stderr, "Insert error %d: %sn",mysql_errno(conn_ptr),mysql_error(conn_ptr));
-        return 0; 
-    }  
+        return 0;
+    }
 }
 
 char *query(MYSQL *conn_ptr,int id,char *IMSI)
@@ -138,9 +138,9 @@ char *query(MYSQL *conn_ptr,int id,char *IMSI)
 	char *s;
     sprintf(s,"%d",id);
 	char *file_path;
-    MYSQL_RES *res_ptr;  
-    MYSQL_ROW sqlrow;  
-    MYSQL_FIELD *fd;  
+    MYSQL_RES *res_ptr;
+    MYSQL_ROW sqlrow;
+    MYSQL_FIELD *fd;
     int res, i, j;
 
     char sql[SQL_MAX_LENGTH] = "select id,file_path from record ";
@@ -162,25 +162,24 @@ char *query(MYSQL *conn_ptr,int id,char *IMSI)
     }
     else
     {
-        res_ptr = mysql_store_result(conn_ptr); 
+        res_ptr = mysql_store_result(conn_ptr);
 
         if(res_ptr)
-        {       
-			printf("%lu Rows\n",(unsigned long)mysql_num_rows(res_ptr));   
+        {
+			printf("%lu Rows\n",(unsigned long)mysql_num_rows(res_ptr));
 			j = mysql_num_fields(res_ptr);
 			file_path = mysql_fetch_row(res_ptr)[1];
-			if (mysql_errno(conn_ptr)) {                      
-				fprintf(stderr,"Retrive error:s\n",mysql_error(conn_ptr));               
-			}
-        }        
-        mysql_free_result(res_ptr);     
+			if (mysql_errno(conn_ptr)) {
+				fprintf(stderr,"Retrive error:s\n",mysql_error(conn_ptr));
+        }
+        mysql_free_result(res_ptr);
     }
     return file_path;
 }
 int count(MYSQL *conn_ptr,char *IMSI,char *product_id)
 {
 
-	MYSQL_RES *res_ptr;    
+	MYSQL_RES *res_ptr;
 	int res;
 	int count = 0;
 	char sql[SQL_MAX_LENGTH] = "select id,imsi,version_no,product_id,note from record";
@@ -195,13 +194,13 @@ int count(MYSQL *conn_ptr,char *IMSI,char *product_id)
 	strcat(sql,product_id);
 	strcat(sql,"'");
 
-    res = mysql_query(conn_ptr,sql); //查询语句  
-    if (res) {         
-        printf("SELECT error:%s\n",mysql_error(conn_ptr));     
-    } else {        
-        res_ptr = mysql_store_result(conn_ptr);             //取出结果集  
+    res = mysql_query(conn_ptr,sql); //查询语句
+    if (res) {
+        printf("SELECT error:%s\n",mysql_error(conn_ptr));
+    } else {
+        res_ptr = mysql_store_result(conn_ptr);             //取出结果集
         if(res_ptr)
-        {        
+        {
             count = (unsigned long)mysql_num_rows(res_ptr);
         }
         mysql_free_result(res_ptr);
