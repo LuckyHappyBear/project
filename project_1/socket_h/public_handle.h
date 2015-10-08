@@ -18,6 +18,14 @@
 #define _PUBLIC_HANDLE_H
 #include "message.h"
 
+#define FILE_BUFFER_SIZE 1024
+
+struct data_transfer
+{
+    char buffer[FILE_BUFFER_SIZE];                  /* the data buffer */
+    int length;                                     /* the length of the data we will transfer */
+};
+
 struct version_info
 {
     int id;                                         /* the id of the backup information in database */

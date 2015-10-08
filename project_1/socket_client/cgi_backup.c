@@ -21,12 +21,12 @@
 #include <string.h>
 #include "../socket_h/message.h"
 #include "../socket_h/public_handle.h"
-#include "../socket_h/cgi.h"
+#include "../socket_h/cgic_client.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define BACKUP_MARK_LEN 2 /* the length of the check message mark */
-#define FILE_BUFFER_LEN 4000 /* the size of the file buffer */
+#define FILE_BUFFER_LEN 1024 /* the size of the file buffer */
 
 int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_path)
 {
@@ -120,6 +120,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                 }
 
                 FILE *fp = fopen(file_path,"rb");
+                struct data_transfer *data = malloc(sizeof(*data));
                 if(NULL == fp)
                 {
                     printf("File Not Found\n");
@@ -140,54 +141,71 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                     /* the length we have not read */
                     int left_len = total_bytes;
 
-                    memset(file_buffer, 0, FILE_BUFFER_LEN);
                     memset(sendline, 0, MAXLINE);
                     while (1)
                     {
                         if ((left_len <= 0) || (read_len >= total_bytes))
                         {
+                            fclose(fp);
+                            memset(sendline, 0, MAXLINE);
+                            sendline[0] = '0';
+                            sendline[1] = '\0';
+                            send(sockfd, sendline, strlen(sendline), 0);
+                            memset(sendline, 0, MAXLINE);
+                            printf("we finished here\n");
                             break;
                         }
 
-                        if ((length = fread(file_buffer, sizeof(char),
-                                              FILE_BUFFER_LEN - 1, fp)) > 0)
+                        if (left_len >= FILE_BUFFER_SIZE)
                         {
-                            sendline[0] = '1';
-                            strncpy(&sendline[1], file_buffer, length);
-                            printf("The length is %d\n",strlen(sendline));
-                            printf("The sendbuffer is %s\n", sendline);
-                            if (send(sockfd, sendline, strlen(sendline), 0) < 0)
+                            memset(data->buffer, 0, FILE_BUFFER_SIZE);
+                            length = fread(data->buffer, 1,
+                                           FILE_BUFFER_SIZE, fp);
+                            data->length = length;
+                            printf("The length in there is  %d\n", length);
+                            read_len += length;
+                            printf("The read_len is %d\n",read_len);
+                        }
+                        else
+                        {
+                            memset(data->buffer, 0, FILE_BUFFER_SIZE);
+                            length = fread(data->buffer, 1, left_len, fp);
+                            printf("The length in there is  %d\n", length);
+                            data->length = length;
+                            read_len += length;
+                            printf("The read_len is %d\n",read_len);
+                        }
+
+                        left_len = total_bytes - read_len;
+
+                        sendline[0] = '1';
+                        memcpy(&sendline[1], data, sizeof(*data));
+                        printf("The length is %d\n",strlen(sendline));
+                        printf("The sendbuffer is %s\n", sendline);
+
+                        if (send(sockfd, sendline, sizeof(*data) + 1, 0) < 0)
+                        {
+                            perror("Send File Failed");
+                            break;
+                        }
+                        else
+                        {
+                            printf("we reach here to wait for response\n");
+                            memset(recvline, 0, MAXLINE);
+                            while (recv(sockfd, recvline, MAXLINE, 0) > 0)
                             {
-                                perror("Send File Failed");
-                                break;
-                            }
-                            else
-                            {
-                                printf("we reach here to wait for response\n");
-                                memset(recvline, 0, MAXLINE);
-                                while (recv(sockfd, recvline, MAXLINE, 0) > 0)
+                                printf("did we reveice the response\n");
+                                printf("The recvbuf content is %s\n",recvline);
+                                if(recvline[0] == '1')
                                 {
-                                    printf("did we reveice the response\n");
-                                    printf("The recvbuf content is %s\n",recvline);
-                                    if(recvline[0] == '1')
-                                    {
-                                        printf("we receive client's response\n");
-                                        break;
-                                    }
+                                    printf("we receive client's response\n");
+                                    break;
                                 }
                             }
-                            printf("we continue send here\n");
-                            memset(file_buffer, 0,FILE_BUFFER_LEN);
-                            memset(sendline, 0, MAXLINE);
                         }
+                        printf("we continue send here\n");
+                        memset(sendline, 0, MAXLINE);
                     }
-                    fclose(fp);
-                    memset(sendline, 0, MAXLINE);
-                    sendline[0] = '0';
-                    sendline[1] = '\0';
-                    send(sockfd, sendline, strlen(sendline), 0);
-                    memset(sendline, 0, MAXLINE);
-                    printf("we finished here\n");
                 }
 
                 return 1;

@@ -130,7 +130,7 @@ int main()
                     start_pos += VERSION_NUM_LEN;
                     strncpy(ver->note, &recvbuf[start_pos], MAX_NOTE_LEN);
                     ver->note[strlen(ver->note)] = '\0';
-                    printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
+                    //printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
                     strncpy(sendbuf,BACKUP_RESPONSE,RESPONSE_MARK_LEN);
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
@@ -138,10 +138,11 @@ int main()
                 }
                 else if(recvbuf[2] == '1')
                 {
-                    printf("The recvbuf is %s\n", recvbuf);
-                    printf("the first recvbuf length is %d\n", strlen(recvbuf));
+                    //printf("The recvbuf is %s\n", recvbuf);
+                    //printf("the first recvbuf length is %d\n", strlen(recvbuf));
                     char file_path[512] = "/home/luckybear/Documents/alpha.tar";
-                    FILE *fp = fopen(file_path, "w");
+                    FILE *fp = fopen(file_path, "ab");
+                    struct data_transfer *data = malloc(sizeof(*data));
                     int length = 0;
                     memset(recvbuf, 0, MAXLINE);
                     memset(sendbuf, 0, MAXLINE);
@@ -153,23 +154,21 @@ int main()
                     memset(recvbuf, 0, MAXLINE);
                     while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
                     {
-                        printf("1The length is %d\n",strlen(recvbuf));
-                        printf("The recvline is %s\n", recvbuf);
+                        /*printf("1The length is %d\n",strlen(recvbuf));
+                        printf("The recvline is %s\n", recvbuf);*/
                         if (recvbuf[0] == '1')
                         {
-                            strncpy(file_buffer, &recvbuf[1], length - 1);
-                            printf("The file length we will write is %s\nthe length is %d\n",file_buffer, length);
-                            if (fwrite(file_buffer, sizeof(char), strlen(file_buffer), fp) < (length - 1))
-                            {
-                                printf("File Write failed.\n");
-                                break;
-                            }
+                            printf("**************************************\n");
+                            memcpy(data, &recvbuf[1], sizeof(*data));
+                            fwrite(data->buffer, 1, data->length, fp);
+                            printf("The buffer we will write is %s\n", data->buffer);
+                            printf("The length we will write is %d\n", data->length);
                             memset(recvbuf, 0, MAXLINE);
-                            memset(file_buffer, 0, FILE_BUFFER_LEN);
+                            memset(data->buffer, 0, FILE_BUFFER_SIZE);
                             memset(sendbuf, 0, MAXLINE);
-                            printf("we reach here to send something\n");
+                            //printf("we reach here to send something\n");
                             sendbuf[0] = '1';
-                            printf("the sendline is %s\n", sendbuf);
+                            //printf("the sendline is %s\n", sendbuf);
                             send(connfd, sendbuf, MAXLINE, 0);
                         }
                         else
@@ -266,62 +265,101 @@ int main()
 
                 memset(file_path, 0, 512);
                 memset(file_buffer, 0, FILE_BUFFER_LEN);
-                strcpy(file_path, "/home/luckybear/test2.txt");
+                strcpy(file_path, "/home/luckybear/alpha.tar");
 
-                FILE *fp = fopen(file_path,"r");
+                FILE *fp = fopen(file_path,"rb");
+                struct data_transfer *data = malloc(sizeof(*data));
                 if(NULL == fp)
                 {
-                    printf("File  Not Found\n");
+                    printf("File Not Found\n");
                 }
                 else
                 {
+                    /* get the total length of the file */
+                    fseek(fp, 0, SEEK_SET);
+                    fseek(fp, 0, SEEK_END);
+                    long total_bytes = ftell(fp);
+                    printf("The total length of the file is %ld\n",total_bytes);
+
+                    fseek(fp, 0, SEEK_SET);
+
                     int length = 0;
-                    memset(file_buffer, 0, FILE_BUFFER_LEN);
+
+                    /* the length we have read */
+                    int read_len = 0;
+
+                    /* the length we have not read */
+                    int left_len = total_bytes;
+
                     memset(sendbuf, 0, MAXLINE);
                     strncpy(sendbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN);
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
-                    while (!feof(fp))
+
+                    while (1)
                     {
-                        if ((length = fread(file_buffer, sizeof(char),
-                                              FILE_BUFFER_LEN - 1, fp)) > 0)
+                        if ((left_len <= 0) || (read_len >= total_bytes))
                         {
-                            sendbuf[0] = '1';
-                            strncpy(&sendbuf[1], file_buffer, length);
-                            printf("The length is %d\n",strlen(sendbuf));
-                            printf("The sendbuffer is %s\n", sendbuf);
-                            if (send(connfd, sendbuf, strlen(sendbuf), 0) < 0)
+                            fclose(fp);
+                            memset(sendbuf, 0, MAXLINE);
+                            sendbuf[0] = '0';
+                            sendbuf[1] = '\0';
+                            send(connfd, sendbuf, strlen(sendbuf), 0);
+                            memset(sendbuf, 0, MAXLINE);
+                            printf("we finished here\n");
+                            break;
+                        }
+
+                        if (left_len >= FILE_BUFFER_SIZE)
+                        {
+                            memset(data->buffer, 0, FILE_BUFFER_SIZE);
+                            length = fread(data->buffer, 1, FILE_BUFFER_SIZE,
+                                          fp);
+                            data->length = length;
+                            printf("The length is %d\n", length);
+                            read_len += length;
+                            printf("The read_len is %d\n", read_len);
+                        }
+                        else
+                        {
+                            memset(data->buffer, 0, FILE_BUFFER_SIZE);
+                            length = fread(data->buffer, 1, left_len, fp);
+                            printf("The length is %d\n" , length);
+                            data->length = length;
+                            read_len += length;
+                            printf("The read_len is %d\n", read_len);
+                        }
+
+                        left_len = total_bytes - read_len;
+
+                        sendbuf[0] = '1';
+                        memcpy(&sendbuf[1], data, sizeof(*data));
+                        printf("The length is %d\n",strlen(sendbuf));
+                        printf("The sendbuffer is %s\n", sendbuf);
+                        if (send(connfd, sendbuf, sizeof(*data) + 1, 0) < 0)
+                        {
+                            perror("Send File Failed");
+                            break;
+                        }
+                        else
+                        {
+                            printf("we reach here to wait for response\n");
+                            memset(recvbuf, 0, MAXLINE);
+                            while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
                             {
-                                perror("Send File Failed");
-                                break;
-                            }
-                            else
-                            {
-                                printf("we reach here to wait for response\n");
-                                memset(recvbuf, 0, MAXLINE);
-                                while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
+                                printf("did we reveice the response\n");
+                                printf("The recvbuf content is %s\n",recvbuf);
+                                if(recvbuf[0] == '1')
                                 {
-                                    printf("did we reveice the response\n");
-                                    printf("The recvbuf content is %s\n",recvbuf);
-                                    if(recvbuf[0] == '1')
-                                    {
-                                        printf("we receive client's response\n");
-                                        break;
-                                    }
+                                    printf("we receive client's response\n");
+                                    break;
                                 }
                             }
-                            printf("we continue send here\n");
-                            memset(file_buffer, 0,FILE_BUFFER_LEN);
-                            memset(sendbuf, 0, MAXLINE);
                         }
+                        printf("we continue send here\n");
+                        memset(file_buffer, 0,FILE_BUFFER_LEN);
+                        memset(sendbuf, 0, MAXLINE); 
                     }
-                    fclose(fp);
-                    memset(sendbuf, 0, MAXLINE);
-                    sendbuf[0] = '0';
-                    sendbuf[1] = '\0';
-                    send(connfd, sendbuf, strlen(sendbuf), 0);
-                    memset(sendbuf, 0, MAXLINE);
-                    printf("we finished here\n");
                 }
             }
         }

@@ -19,7 +19,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_h/cgi.h"
+#include "../socket_h/cgic_client.h"
 #include "../socket_h/message.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
@@ -76,28 +76,27 @@ int cgi_recover(int id, char *IP)
             {
                 printf("The recvline is %s\n", recvline);
                 printf("the first recvline length is %d\n", strlen(recvline));
-                char file_path[512] = "/home/luckybear/Documents/test1.txt";
-                FILE *fp = fopen(file_path, "w");
-                /*the third bit is 1 means file transfer continue
-                  0 means file transfer finish*/
+                char file_path[512] = "/home/luckybear/Documents/test.tar";
+                FILE *fp = fopen(file_path, "ab");
+                struct data_transfer *data = malloc(sizeof(*data));
                 int length = 0;
                 memset(recvline, 0, MAXLINE);
                 memset(file_buffer, 0, FILE_BUFFER_LEN);
                 while ((length = recv(sockfd, recvline, MAXLINE, 0)) > 0)
                 {
-                    printf("1The length is %d\n",strlen(recvline));
-                    printf("The recvline is %s\n", recvline);
+                    //printf("1The length is %d\n",strlen(recvline));
+                    //printf("The recvline is %s\n", recvline);
                     if (recvline[0] == '1')
                     {
-                        strncpy(file_buffer, &recvline[1], length - 1);
+                        memcpy(data, &recvline[1], sizeof(*data));
                         printf("The file length we will write is %s\nthe length is %d\n",file_buffer, length);
-                        if (fwrite(file_buffer, sizeof(char), strlen(file_buffer), fp) < (length - 1))
+                        if (fwrite(data->buffer, 1, data->length, fp) < 0)
                         {
                             printf("File Write failed.\n");
                             break;
                         }
                         memset(recvline, 0, MAXLINE);
-                        memset(file_buffer, 0, FILE_BUFFER_LEN);
+                        memset(data->buffer, 0, FILE_BUFFER_SIZE);
                         memset(sendline, 0, MAXLINE);
                         printf("we reach here to send something\n");
                         sendline[0] = '1';
