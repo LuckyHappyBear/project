@@ -25,13 +25,11 @@
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define RECOVER_MARK_LEN 2 /* the length of the check message mark */
-#define FILE_BUFFER_LEN 4000 /* the length of the file buffer */
 
 int cgi_recover(int id, char *IP)
 {
     int sockfd;
     struct sockaddr_in servaddr;
-    char file_buffer[FILE_BUFFER_LEN];
     char sendline[MAXLINE], recvline[MAXLINE];
 
     /* initialize the send buffer and receive buffer */
@@ -40,8 +38,10 @@ int cgi_recover(int id, char *IP)
 
     if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_recover:Problem in creating the socket\n");
-        exit(1);
+        #endif
+        return -1;
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -53,8 +53,10 @@ int cgi_recover(int id, char *IP)
     /* connection of the client to the socket */
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_recover:Problem in connecting to the server");
-        exit(2);
+        #endif
+        return -1;
     }
 
     strncpy(sendline, CGI_RECOVER, RECOVER_MARK_LEN);
@@ -63,10 +65,11 @@ int cgi_recover(int id, char *IP)
 
     while (1)
     {
-        printf("we reach here or not\n");
         if (recv(sockfd, recvline, MAXLINE, 0) < 0)
         {
+            #if CGI_TEST
             perror("cgi_recover:The server terminated prematurely\n");
+            #endif
             return -1;
         }
         else
@@ -74,14 +77,15 @@ int cgi_recover(int id, char *IP)
             /* server response this request */
             if (strncmp(recvline, RECOVER_RESPONSE, RECOVER_MARK_LEN) == 0)
             {
+                #if CGI_TEST
                 printf("The recvline is %s\n", recvline);
                 printf("the first recvline length is %d\n", strlen(recvline));
+                #endif
                 char file_path[512] = "/home/luckybear/Documents/test.tar";
                 FILE *fp = fopen(file_path, "ab");
                 struct data_transfer *data = malloc(sizeof(*data));
                 int length = 0;
                 memset(recvline, 0, MAXLINE);
-                memset(file_buffer, 0, FILE_BUFFER_LEN);
                 while ((length = recv(sockfd, recvline, MAXLINE, 0)) > 0)
                 {
                     //printf("1The length is %d\n",strlen(recvline));
@@ -89,18 +93,23 @@ int cgi_recover(int id, char *IP)
                     if (recvline[0] == '1')
                     {
                         memcpy(data, &recvline[1], sizeof(*data));
-                        printf("The file length we will write is %s\nthe length is %d\n",file_buffer, length);
                         if (fwrite(data->buffer, 1, data->length, fp) < 0)
                         {
+                            #if CGI_TEST
                             printf("File Write failed.\n");
-                            break;
+                            #endif
+                            return -1;
                         }
                         memset(recvline, 0, MAXLINE);
                         memset(data->buffer, 0, FILE_BUFFER_SIZE);
                         memset(sendline, 0, MAXLINE);
+                        #if CGI_TEST
                         printf("we reach here to send something\n");
+                        #endif
                         sendline[0] = '1';
+                        #if CGI_TEST
                         printf("the sendline is %s\n", sendline);
+                        #endif
                         send(sockfd, sendline, MAXLINE, 0);
                     }
                     else
@@ -114,7 +123,9 @@ int cgi_recover(int id, char *IP)
                 }
                 else
                 {
+                    #if CGI_TEST
                     printf("we reach here?\n");
+                    #endif
                     fclose(fp);
                     return 1;
                 }
@@ -122,15 +133,12 @@ int cgi_recover(int id, char *IP)
             else
             {
                 /* server doesn't response this request */
+                #if CGI_TEST
                 printf("we reach here and exit the program\n");
+                #endif
                 return -1;
             }
         }
     }
 }
 
-int main()
-{
-    cgi_recover(20,"127.0.0.1");
-    return 0;
-}

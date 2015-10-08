@@ -72,12 +72,13 @@ int cgi_recover(int id, char *IP);
  Function:     cgi_delete
  Description:  delete a backup from server
  Input:        id: the id of this record in database
-               IP:the server IP
+               IP: the server IP
+               IMSI:International Mobile Subscriber Identification Number
  Output:       NONE
  Return:       1:delete successful -1:delete failed
  Others:       NONE
 *******************************************************************************/
-int cgi_delete(int id, char *IP);
+int cgi_delete(int id, char *IP, char *IMSI);
 
 #ifdef __cplusplus
 }

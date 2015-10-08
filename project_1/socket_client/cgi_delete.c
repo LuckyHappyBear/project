@@ -19,14 +19,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_h/cgi.h"
+#include "../socket_h/cgic_client.h"
 #include "../socket_h/message.h"
+#include "../socket_h/public_handle.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define DELETE_MARK_LEN 2 /* the length of the check message mark */
 
-int cgi_delete(int id, char *IP)
+int cgi_delete(int id, char *IP, char *IMSI)
 {
     int sockfd;
     int return_code;
@@ -39,8 +40,10 @@ int cgi_delete(int id, char *IP)
 
     if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_delete:Problem in creating the socket\n");
-        exit(1);
+        #endif
+        return -1;
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -52,8 +55,10 @@ int cgi_delete(int id, char *IP)
     /* connection of the client to the socket */
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_delete:Problem in connecting to the server");
-        exit(2);
+        #endif
+        return -1;
     }
 
     /* send delete message, request to delete backup version which id is id*/
@@ -65,7 +70,9 @@ int cgi_delete(int id, char *IP)
     {
         if (recv(sockfd, recvline, MAXLINE, 0) < 0)
         {
+            #if CGI_TEST
             perror("cgi_delete:The server terminated prematurely\n");
+            #endif
             return -1;
         }
         else
@@ -76,7 +83,9 @@ int cgi_delete(int id, char *IP)
                 if (recvline[2] == '1')
                 {
                     /* delete successful */
+                    #if CGI_TEST
                     printf("delete successful\n");
+                    #endif
                     return 1;
                 }
                 else
@@ -93,11 +102,5 @@ int cgi_delete(int id, char *IP)
             }
         }
     }
-}
-
-int main()
-{
-    cgi_delete(20,"127.0.0.1");
-    return 0;
 }
 

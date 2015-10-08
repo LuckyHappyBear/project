@@ -19,6 +19,7 @@
 #include "message.h"
 
 #define FILE_BUFFER_SIZE 1024
+#define CGI_TEST 1
 
 struct data_transfer
 {

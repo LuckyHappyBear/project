@@ -19,8 +19,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_h/cgi.h"
+#include "../socket_h/cgic_client.h"
 #include "../socket_h/message.h"
+#include "../socket_h/public_handle.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
@@ -40,8 +41,10 @@ int cgi_check(char *IMSI, char *IP)
 
     if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_check:Problem in creating the socket\n");
-        exit(1);
+        #endif
+        return -1;
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -53,8 +56,10 @@ int cgi_check(char *IMSI, char *IP)
     /* connection of the client to the socket */
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_check:Problem in connecting to the server");
-        exit(2);
+        #endif
+        return -1;
     }
 
     strncpy(sendline, CGI_CHECK, CHECK_MARK_LEN);
@@ -63,11 +68,12 @@ int cgi_check(char *IMSI, char *IP)
 
     while (1)
     {
-        printf("we reach here or not\n");
         if (recv(sockfd, recvline, MAXLINE, 0) < 0)
         {
+            #if CGI_TEST
             perror("cgi_check:The server terminated prematurely\n");
-            exit(3);
+            #endif
+            return -1;
         }
         else
         {
@@ -77,7 +83,9 @@ int cgi_check(char *IMSI, char *IP)
                 char remain_space[REMAIN_FIELD_LEN];
                 strncpy(remain_space, &recvline[CHECK_MARK_LEN], REMAIN_FIELD_LEN);
                 return_code = atoi(remain_space);
+                #if CGI_TEST
                 printf("the recvline is %s\n", recvline);
+                #endif
                 return return_code;
             }
             else
@@ -90,8 +98,3 @@ int cgi_check(char *IMSI, char *IP)
     }
 }
 
-int main()
-{
-    cgi_check("IMSIIS0755110000","127.0.0.1");
-    return 0;
-}

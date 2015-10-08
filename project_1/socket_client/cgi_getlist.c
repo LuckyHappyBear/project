@@ -20,14 +20,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../socket_h/cgi.h"
+#include "../socket_h/cgic_client.h"
 #include "../socket_h/message.h"
 #include "../socket_h/public_handle.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define GETLIST_MARK_LEN 2 /* the length of the check message mark */
-#define FILE_BUFFER_SIZE 4000 /* the size of the file buffer */
 
 int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ver_list)
 {
@@ -44,8 +43,10 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
 
     if ((sockfd = socket(AF_INET,SOCK_STREAM, 0)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_getlist:Problem in creating the socket\n");
-        exit(1);
+        #endif
+        return -1;
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -57,8 +58,10 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
     /* connection of the client to the socket */
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
     {
+        #if CGI_TEST
         perror("cgi_getlist:Problem in connecting to the server");
-        exit(2);
+        #endif
+        return -1;
     }
 
     /* message mark field */
@@ -72,12 +75,13 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
     strncpy(&sendline[start_pos], product_id, strlen(product_id));
 
     send(sockfd, sendline, strlen(sendline), 0);
+    #if CGI_TEST
     printf("the sendline is %s\n",sendline);
+    #endif
     memset(sendline, 0, MAXLINE);
     //printf("the length is %s\n", &sendline[start_pos]);
     while (1)
     {
-        printf("we reach here or not\n");
         if (recv(sockfd, recvline, MAXLINE, 0) > 0)
         {
             if (strncmp(recvline, GETLIST_RESPONSE, GETLIST_MARK_LEN) == 0)
@@ -89,14 +93,18 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
                 int list_num;
 
                 int length = sizeof(struct version_info);
+                #if CGI_TEST
                 printf("The length is %d\n",length);
+                #endif
                 /* get the number of backup version */
                 char list[2];
                 strncpy(list, &recvline[2], 2);
                 list_num = atoi(list);
                 (*ver_list) = malloc(list_num * sizeof(struct version_info));
                 start_pos = 4;
+                #if CGI_TEST
                 printf("The list_num is %d\n",list_num);
+                #endif
 
                 for (i = 0; i < list_num; i ++)
                 {
@@ -124,28 +132,11 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
         }
         else
         {
+            #if CGI_TEST
             perror("cgi_getlist:The server terminated prematurely\n");
-            exit(3);
+            #endif
+            return -1;
         }
     }
 }
 
-int main()
-{
-    struct version_info *p = NULL;
-    int num = cgi_getlist("123456789871111","127.0.0.1","73000001", &p);
-    if ( NULL == p )
-    {
-        puts("pointer NULL");
-    }
-    else
-    {
-        puts("pointer not NULL");
-    }
-    int i;
-    for(i = 0; i < num; i ++)
-    {
-    printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",p[i].id, p[i].imsi,p[i].product_id, p[i].version_no, p[i].note);
-    }
-    return 0;
-}
