@@ -86,6 +86,11 @@ int cgi_recover(int id, char *IP, char *IMSI)
                 struct data_transfer *data = malloc(sizeof(*data));
                 int length = 0;
                 memset(recvline, 0, MAXLINE);
+
+                memset(sendline, 0, MAXLINE);
+                sendline[0] = '1';
+                send(sockfd, sendline, MAXLINE, 0);
+
                 while ((length = recv(sockfd, recvline, MAXLINE, 0)) > 0)
                 {
                     //printf("1The length is %d\n",strlen(recvline));

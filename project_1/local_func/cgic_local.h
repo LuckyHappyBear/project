@@ -24,27 +24,23 @@ extern "C" {
   Input:
     (1)srcfolder: The absolute path of the source file/folder's folder
     (2)srcname  : The name of the source file/folder name.
-    (3)dstfolder: The absolute path of the destination file's folder
+    (3)dstfile  : The absolute path of the destination file
   Output:
-  Return: 0 for succeed, 1 for fail.
+  Return: 0 for succeed, -1 for fail.
   Others:
 *******************************************************************************/
-int cgi_pack(const char *srcfolder, const char *srcname,
-             const char *dstfolder, const char *dstname);
+int cgi_pack(const char *srcfolder, const char *srcname, const char *dstfile);
 /******************************************************************************
   Function:    cgi_unpack
   Description: unpack file
   Input:
-    (1)srcfolder: The absolute path of the source file's folder
-    (2)srcname  : The name of the source file's name.
-    (3)dstfolder: The absolute path of the destination file's folder
-    (4)dstname  : The name of the destinaton file.
+    (1)srcfile  : The absolute path of the source file
+    (2)dstfolder: The absolute path of the destination file's folder
   Output:
-  Return: 0 for succeed, 1 for fail.
+  Return: 0 for succeed, -1 for fail.
   Others:
 *******************************************************************************/
-int cgi_unpack(const char *srcfolder, const char *srcname,
-               const char *dstfolder);
+int cgi_unpack(const char *srcfile, const char *dstfolder);
 /******************************************************************************
   Function:    cgi_rmfile
   Description: remove file
@@ -55,44 +51,18 @@ int cgi_unpack(const char *srcfolder, const char *srcname,
   Return: 0 for succeed, 1 for fail.
   Others:
 *******************************************************************************/
-int cgi_rmfile(const char *folder, const char *name);
-/******************************************************************************
-  Function:    cgi_rmfolder
-  Description: remove folder
-  Input:
-    (1)folder: The absolute path of the source folder's folder
-    (2)name  : The name of the source file's name.
-  Output:
-  Return: 0 for succeed, 1 for fail.
-  Others:
-*******************************************************************************/
-int cgi_rmfolder(const char *folder, const char *name);
+int cgi_rmfile(const char *file);
 /******************************************************************************
   Function:    cgi_mvfile
   Description: move file from src to dst
   Input:
-    (1)srcfolder: The absolute path of the source file's folder
-    (2)srcname  : The name of the source file's name.
-    (3)dstfolder: The absolute path of the destination file's folder
+    (1)srcfile  : The absolute path of the source file
+    (2)dstfolder: The absolute path of the destination file's folder
   Output:
   Return: 0 for succeed, 1 for fail.
   Others:
 *******************************************************************************/
-int cgi_mvfile(const char *srcfolder, const char *srcname,
-               const char *dstfolder);
-/******************************************************************************
-  Function:    cgi_mvfolder
-  Description: move folder from src to dst
-  Input:
-    (1)srcfolder: The absolute path of the source folder's folder
-    (2)srcname  : The name of the source file's name.
-    (3)dstfolder: The absolute path of the destination folder's folder
-  Output:
-  Return: 0 for succeed, 1 for fail.
-  Others:
-*******************************************************************************/
-int cgi_mvfolder(const char *srcfolder, const char *srcname,
-                 const char *dstfolder);
+int cgi_mvfile(const char *srcfile, const char *dstfolder);
 /******************************************************************************
   Function:    cgi_get_imsi
   Description: return the ISMI buffer, if the buffer store nothing, return NULL.

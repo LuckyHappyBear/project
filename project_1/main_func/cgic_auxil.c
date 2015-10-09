@@ -23,23 +23,22 @@
 #include "../socket_h/message.h"
 #include "../socket_h/public_handle.h"
 
-/* macro for test */
-#define CGIC_LOCAL_TEST_0    0
+#define RESULT_DEALING               0
+#define RESULT_SUCCEED               1
+#define RESULT_FAILURE_LOCAL         2
+#define RESULT_FAILURE_REMOTE        3
+#define RESULT_FAILURE_REMOTE_CHECK  3
+#define RESULT_FAILURE_REMOTE_FULL   4
+#define RESULT_FAILURE_REMOTE_BACKUP 5
 
-#define STATUS_DEALING        0
-#define STATUS_SUCCEED        1
-#define STATUS_FAILURE_LOCAL  2
-#define STATUS_FAILURE_REMOTE 3
-
-#define PACK_SRC_FOLDER "~/test/"
-#define PACK_SRC_NAME   "config/"
-#define PACK_DST_FOLDER "/tmp/"
-#define PACK_DST_NAME   "config.tar"
+#define PACK_SRC_FOLDER "/app/"
+#define PACK_SRC_NAME   "config"
+#define PACK_SRC_FILE   "/app/config"
 #define PACK_DST_FILE   "/tmp/config.tar"
 
-#define UNPACK_SRC_FOLDER "/tmp/"
-#define UNPACK_SRC_NAME   "config.tar"
+#define UNPACK_SRC_FILE "/tmp/config.tar"
 #define UNPACK_DST_FOLDER "/tmp/"
+#define UNPACK_DST_FILE "/tmp/config"
 
 #define SERVER_IP  "127.0.0.1"
 
@@ -57,7 +56,7 @@ char *get_input_test(void)
 {
     char input[] = "{\"module\":\"backup\","
                     "\"action\":3,"
-                    "\"dbid\":16,"
+                    "\"dbid\":19,"
                     "\"remark\":\"nothing\"}";
     char *pout = (char *)malloc( 1 + sizeof(char) * strlen(input) );
     memset(pout, 0, 1 + sizeof(char) * strlen(input) );
@@ -213,8 +212,8 @@ void output_test(void)
     /* Add TOWEB_ACTION */
     cJSON_AddNumberToObject(root, TOWEB_ACTION, 1);
 
-    /* Add TOWEB_STATUS */
-    cJSON_AddNumberToObject(root, TOWEB_STATUS, 0);
+    /* Add TOWEB_RESULT */
+    cJSON_AddNumberToObject(root, TOWEB_RESULT, 0);
 
     /* Add TOWEB_USEDVOLUME */
     cJSON_AddNumberToObject(root, TOWEB_USEDVOLUME, 3);
@@ -291,16 +290,6 @@ void output_cJSON(cJSON *root)
 *******************************************************************************/
 void action_getlist(struct data_from_web *pinfo)
 {
-#if CGIC_LOCAL_TEST_0
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-    cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
-    output_cJSON(root);
-    cJSON_Delete(root);
-    root = NULL;
-    return;
-#endif
-
     /* getlist from server */
     char *imsi = cgi_get_imsi();
     char *product_id = cgi_get_product_id();
@@ -309,7 +298,7 @@ void action_getlist(struct data_from_web *pinfo)
         /* Response to web: failure_local */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_LOCAL);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -332,7 +321,7 @@ void action_getlist(struct data_from_web *pinfo)
         /* Response to web: failure_remote */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_REMOTE);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_REMOTE);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -343,7 +332,7 @@ void action_getlist(struct data_from_web *pinfo)
         /* Response to web: succeed */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_SUCCEED);
         cJSON_AddNumberToObject(root, TOWEB_USEDVOLUME, list_num);
         cJSON_AddNumberToObject(root, TOWEB_FULLVOLUME, DEFAULT_VOLUME);
 
@@ -381,16 +370,6 @@ void action_getlist(struct data_from_web *pinfo)
 *******************************************************************************/
 void action_backup(struct data_from_web *pinfo)
 {
-#if CGIC_LOCAL_TEST_0
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-    cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
-    output_cJSON(root);
-    cJSON_Delete(root);
-    root = NULL;
-    return;
-#endif
-
     /* check for room to backup */
     char *imsi = cgi_get_imsi();
     char *product_id = cgi_get_product_id();
@@ -399,7 +378,7 @@ void action_backup(struct data_from_web *pinfo)
         /* Response to web: failure_local */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_LOCAL);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -421,7 +400,7 @@ void action_backup(struct data_from_web *pinfo)
         /* Response to web: failure_remote */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_REMOTE);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_REMOTE_CHECK);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -433,7 +412,7 @@ void action_backup(struct data_from_web *pinfo)
         /* Response to web: failure_remote */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_REMOTE);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_REMOTE_FULL);
         cJSON_AddNumberToObject(root, TOWEB_USEDVOLUME, volnum);
         cJSON_AddNumberToObject(root, TOWEB_FULLVOLUME, DEFAULT_VOLUME);
         output_cJSON(root);
@@ -444,19 +423,29 @@ void action_backup(struct data_from_web *pinfo)
     else
     {
         /* Pack config files */
-        cgi_pack(PACK_SRC_FOLDER, PACK_SRC_NAME, PACK_DST_FOLDER, PACK_DST_NAME);
+        int flag_pack = cgi_pack(PACK_SRC_FOLDER, PACK_SRC_NAME, PACK_DST_FILE);
+        /* If pack fail */
+        if ( -1 == flag_pack )
+        {
+            /* Response to web: failure_local */
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
+            cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
+            output_cJSON(root);
+            cJSON_Delete(root);
+            root = NULL;
+            /* end of: Response to web: failure_local */
+        }
 
         /* Backup config files */
-        int flag_backup = cgi_backup(imsi, SERVER_IP, product_id, pinfo->remark,
-                                     PACK_DST_FILE);
-
+        int flag_backup = cgi_backup(imsi, SERVER_IP, product_id, pinfo->remark, PACK_DST_FILE);
         /* If backup fail */
         if ( -1 == flag_backup )
         {
             /* Response to web: failure_remote */
             cJSON *root = cJSON_CreateObject();
             cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-            cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_REMOTE);
+            cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_REMOTE_BACKUP);
             cJSON_AddNumberToObject(root, TOWEB_USEDVOLUME, volnum);
             cJSON_AddNumberToObject(root, TOWEB_FULLVOLUME, DEFAULT_VOLUME);
             output_cJSON(root);
@@ -469,14 +458,14 @@ void action_backup(struct data_from_web *pinfo)
             /* Response to web: succeed */
             cJSON *root = cJSON_CreateObject();
             cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-            cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
+            cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_SUCCEED);
             output_cJSON(root);
             cJSON_Delete(root);
             root = NULL;
             /* end of: Response to web: succeed */
         }
         /* Delete local packed config file */
-        cgi_rmfile(PACK_DST_FOLDER, PACK_DST_NAME);
+        cgi_rmfile(PACK_DST_FILE);
     }
 }
 /******************************************************************************
@@ -490,22 +479,23 @@ void action_backup(struct data_from_web *pinfo)
 *******************************************************************************/
 void action_recover(struct data_from_web *pinfo)
 {
-#if CGIC_LOCAL_TEST_0
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-    cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
-    output_cJSON(root);
-    cJSON_Delete(root);
-    root = NULL;
-    return;
-#endif
-
 #if CGIC_LOCAL_TEST
     printf("dbid: %d\n", pinfo->dbid);
 #endif
     char *imsi = cgi_get_imsi();
-
-
+    if ( NULL == imsi )
+    {
+        /* Response to web: failure_local */
+        cJSON *root = cJSON_CreateObject();
+        cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
+        output_cJSON(root);
+        cJSON_Delete(root);
+        root = NULL;
+        /* end of: Response to web: failure_local */
+        return;
+    }
+    
     /* Request file from server */
     int flag_recover = cgi_recover(pinfo->dbid, SERVER_IP, imsi);
     /* If recover fail */
@@ -514,7 +504,7 @@ void action_recover(struct data_from_web *pinfo)
         /* Response to web: failure_remote */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_REMOTE);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_REMOTE);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -523,17 +513,41 @@ void action_recover(struct data_from_web *pinfo)
     else
     {
         /* Unpack file */
-        cgi_unpack(UNPACK_SRC_FOLDER, UNPACK_SRC_NAME, UNPACK_DST_FOLDER);
+        int flag_unpack = cgi_unpack(UNPACK_SRC_FILE, UNPACK_DST_FOLDER);
+        /* If unpack fails */
+        if ( -1 == flag_unpack )
+        {
+            /* Response to web: failure_local */
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
+            cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
+            output_cJSON(root);
+            cJSON_Delete(root);
+            root = NULL;
+            /* end of: Response to web: failure_local */
+        }
 
         /* Rewrite files */
-        cgi_rmfolder(PACK_SRC_FOLDER, PACK_SRC_NAME);
-        cgi_mvfolder(UNPACK_DST_FOLDER, PACK_SRC_NAME, PACK_SRC_FOLDER);
-        cgi_rmfile(UNPACK_SRC_FOLDER, UNPACK_SRC_NAME);
+        cgi_rmfile(PACK_SRC_FILE);
+        int flag_mv = cgi_mvfile(UNPACK_DST_FILE, PACK_SRC_FOLDER);
+        /* If unpack fails */
+        if ( -1 == flag_mv )
+        {
+            /* Response to web: failure_local */
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
+            cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
+            output_cJSON(root);
+            cJSON_Delete(root);
+            root = NULL;
+            /* end of: Response to web: failure_local */
+        }
+        cgi_rmfile(UNPACK_SRC_FILE);
 
         /* Response to web: succeed*/
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_SUCCEED);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -551,22 +565,24 @@ void action_recover(struct data_from_web *pinfo)
 *******************************************************************************/
 void action_delete(struct data_from_web *pinfo)
 {
-#if CGIC_LOCAL_TEST_0
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-    cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
-    output_cJSON(root);
-    cJSON_Delete(root);
-    root = NULL;
-    return;
-#endif
-
 #if CGIC_LOCAL_TEST
     printf("dbid: %d\n", pinfo->dbid);
 #endif
 
     /* Get IMSI */
     char *imsi = cgi_get_imsi();
+    if ( NULL == imsi )
+    {
+        /* Response to web: failure_local */
+        cJSON *root = cJSON_CreateObject();
+        cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_LOCAL);
+        output_cJSON(root);
+        cJSON_Delete(root);
+        root = NULL;
+        /* end of: Response to web: failure_local */
+        return;
+    }
 
     /* Request server to delete */
     int flag_delete = cgi_delete(pinfo->dbid, SERVER_IP, imsi);
@@ -577,7 +593,7 @@ void action_delete(struct data_from_web *pinfo)
         /* Response to web: failure_remote */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_FAILURE_REMOTE);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_FAILURE_REMOTE);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;
@@ -588,7 +604,7 @@ void action_delete(struct data_from_web *pinfo)
         /* Response to web: succeed */
         cJSON *root = cJSON_CreateObject();
         cJSON_AddNumberToObject(root, TOWEB_ACTION, pinfo->action);
-        cJSON_AddNumberToObject(root, TOWEB_STATUS, STATUS_SUCCEED);
+        cJSON_AddNumberToObject(root, TOWEB_RESULT, RESULT_SUCCEED);
         output_cJSON(root);
         cJSON_Delete(root);
         root = NULL;

@@ -248,6 +248,7 @@ int main()
                 memset(IMSI, 0, strlen(IMSI));
                 strncpy(IMSI, &recvbuf[2], IMSI_LEN);
                 IMSI[strlen(IMSI)] = '\0';
+                printf("the protadsfasdf is %s\n", &recvbuf[17]);
                 strncpy(product_id, &recvbuf[2 + IMSI_LEN], PRODUCT_ID_LEN);
                 product_id[PRODUCT_ID_LEN] = '\0';
                 printf("The IMSI is %s\nThe product_id is %s\n", IMSI, product_id);
@@ -279,6 +280,8 @@ int main()
                 int id;
                 char *id_imsi;
                 int  del_result;
+                char file_path[512];
+                memset(file_path, 0, 512);
                 memset(IMSI, 0, IMSI_LEN + 1);
                 memcpy(&id, &recvbuf[2 + IMSI_LEN], sizeof(int));
                 strncpy(IMSI, &recvbuf[2], IMSI_LEN);
@@ -288,7 +291,10 @@ int main()
 
                 /* we do delete operations here */
                 printf("***************************\n");
+                strcpy(file_path, recover(conn_ptr, id, IMSI));
+                remove(file_path);
                 del_result = delete(conn_ptr, id, IMSI);
+                printf("The file_path is %s\n",file_path);
                 printf("***************************\n");
                 if (del_result)
                 {
@@ -350,6 +356,14 @@ int main()
                     strncpy(sendbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN);
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
+
+                    while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
+                    {
+                        if(recvbuf[0] == '1')
+                        {
+                            break;
+                        }
+                    }
 
                     while (1)
                     {

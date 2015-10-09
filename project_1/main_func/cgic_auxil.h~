@@ -40,7 +40,7 @@ struct data_from_web
 
 /* Data from CGI to web */
 #define TOWEB_ACTION      "action"
-#define TOWEB_RESULT      "result" 
+#define TOWEB_STATUS      "status" 
 #define TOWEB_USEDVOLUME  "usedvolume"
 #define TOWEB_FULLVOLUME  "fullvolume"
 #define TOWEB_ITEM        "item"

@@ -68,11 +68,15 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
     strncpy(sendline, CGI_GETLIST, GETLIST_MARK_LEN);
 
     /* IMSI field */
-    strncpy(&sendline[GETLIST_MARK_LEN], IMSI, strlen(IMSI));
+    strncpy(&sendline[GETLIST_MARK_LEN], IMSI, IMSI_LEN);
 
     /* product_id field */
+    printf("The product_id is %s\n",product_id);
     start_pos = GETLIST_MARK_LEN + IMSI_LEN;
-    strncpy(&sendline[start_pos], product_id, strlen(product_id));
+    strncpy(&sendline[start_pos], product_id, PRODUCT_ID_LEN);
+
+    printf("the sendbuf is %s\n",sendline);
+    printf("the send product_id is %s\n", &sendline[start_pos]);
 
     send(sockfd, sendline, strlen(sendline), 0);
     #if CGI_TEST

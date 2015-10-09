@@ -16,7 +16,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#define CGIC_LOCAL_TEST 1
+
+#define MAX_FILE       100
 #define MAX_COMMAND    100
 #define MAX_IMSI       20
 #define MAX_PRODUCT_ID 20
@@ -30,28 +35,47 @@ static char product_id[MAX_PRODUCT_ID] = {0};
   Input:
     (1)srcfolder: The absolute path of the source file/folder's folder
     (2)srcname  : The name of the source file/folder name.
-    (3)dstfolder: The absolute path of the destination file's folder
-    (4)dstname  : The name of the destinaton file.
+    (3)dstfile  : The absolute path of the destination file
   Output:
-  Return: 0 for succeed, 1 for fail.
+  Return: 0 for succeed, -1 for fail.
   Others:
 *******************************************************************************/
-int cgi_pack(const char *srcfolder, const char *srcname,
-             const char *dstfolder, const char *dstname)
+int cgi_pack(const char *srcfolder, const char *srcname, const char *dstfile)
 {
-    if ( ( NULL == srcfolder ) || ( NULL == srcname )
-      || ( NULL == dstfolder ) || ( NULL == dstname ) )
+    /* Check the input */
+    if ( ( NULL == srcfolder ) || ( NULL == srcname ) || ( NULL == dstfile ) )
     {
-        return 1;
+        return -1;
+    }
+
+    /* Check the file existence */
+    char srcfile[MAX_FILE];
+    memset(srcfile, 0, MAX_FILE);
+    strcat(srcfile, srcfolder);
+    if ( '/' != srcfile[ strlen(srcfile) - 1 ] )
+    {
+        srcfile[strlen(srcfile)] = '/';
+    }
+    strcat(srcfile, srcname);
+#if CGIC_LOCAL_TEST
+    printf("srcfile: %s\n", srcfile);
+#endif
+    if ( -1 == access(srcfile, F_OK) )
+    {
+#if CGIC_LOCAL_TEST
+        perror("No file to pack");
+#endif
+        return -1;
     }
 
     char command[MAX_COMMAND];
     memset(command, 0, MAX_COMMAND);
-
-    //strcat(command, "busybox tar -cf ");
-    strcat(command, "tar -cf ");
-    strcat(command, dstfolder);
-    strcat(command, dstname);
+#if CGIC_LOCAL_TEST
+    strcat(command, "tar -cf");
+#else
+    strcat(command, "busybox tar -cf ");
+#endif
+    strcat(command, dstfile);
     strcat(command, " -C ");
     strcat(command, srcfolder);
     strcat(command, " ");
@@ -64,29 +88,44 @@ int cgi_pack(const char *srcfolder, const char *srcname,
   Function:    cgi_unpack
   Description: unpack file
   Input:
-    (1)srcfolder: The absolute path of the source file's folder
-    (2)srcname  : The name of the source file's name.
-    (3)dstfolder: The absolute path of the destination file's folder
+    (1)srcfile  : The absolute path of the source file
+    (2)dstfolder: The absolute path of the destination file's folder
   Output:
-  Return: 0 for succeed, 1 for fail.
+  Return: 0 for succeed, -1 for fail.
   Others:
 *******************************************************************************/
-int cgi_unpack(const char *srcfolder, const char *srcname,
-               const char *dstfolder)
+int cgi_unpack(const char *srcfile, const char *dstfolder)
 {
-    if ( ( NULL == srcfolder ) || ( NULL == srcname )
-      || ( NULL == dstfolder ) )
+    /* Check the input */
+    if ( ( NULL == srcfile ) || ( NULL == dstfolder ) )
     {
-        return 1;
+        return -1;
+    }
+
+    /* Check the file existence */
+    if ( 0 != access(srcfile, F_OK) )
+    {
+#if CGIC_LOCAL_TEST
+        printf("No file to unpack: %s\n", srcfile);
+#endif
+        return -1;
+    }
+    if ( 0 != access(dstfolder, F_OK) )
+    {
+#if CGIC_LOCAL_TEST
+        printf("No dstfolder to unpack: %s\n", dstfolder);
+#endif
+        return -1;
     }
 
     char command[MAX_COMMAND];
     memset(command, 0, MAX_COMMAND);
-
-    //strcat(command, "busybox tar -xf ");
-    strcat(command, "tar -xf ");
-    strcat(command, srcfolder);
-    strcat(command, srcname);
+#if CGIC_LOCAL_TEST
+    strcat(command, "tar -xf");
+#else
+    strcat(command, "busybox tar -xf ");
+#endif
+    strcat(command, srcfile);
     strcat(command, " -C ");
     strcat(command, dstfolder);
 
@@ -103,46 +142,38 @@ int cgi_unpack(const char *srcfolder, const char *srcname,
   Return: 0 for succeed, 1 for fail.
   Others:
 *******************************************************************************/
-int cgi_rmfile(const char *folder, const char *name)
+int cgi_rmfile(const char *file)
 {
-    if ( ( NULL == folder ) || ( NULL == name) )
+    /* Check the input */
+    if ( NULL == file )
     {
-        return 1;
+        return -1;
     }
 
+    /* Check the file existence */
+    if ( 0 != access(file, F_OK) )
+    {
+#if CGIC_LOCAL_TEST
+        printf("No file to remove: %s\n", file);
+#endif
+        return 0;
+    }
+
+    struct stat fileinfo;
+    stat(file, &fileinfo);
     char command[MAX_COMMAND];
     memset(command, 0, MAX_COMMAND);
 
-    strcat(command, "rm -f ");
-    strcat(command, folder);
-    strcat(command, name);
-
-    system(command);
-    return 0;
-}
-/******************************************************************************
-  Function:    cgi_rmfolder
-  Description: remove folder
-  Input:
-    (1)folder: The absolute path of the source folder's folder
-    (2)name  : The name of the source file's name.
-  Output:
-  Return: 0 for succeed, 1 for fail.
-  Others:
-*******************************************************************************/
-int cgi_rmfolder(const char *folder, const char *name)
-{
-    if ( ( NULL == folder ) || ( NULL == name) )
+    /* If the file is a folder */
+    if ( S_ISDIR(fileinfo.st_mode) )
     {
-        return 1;
+        strcat(command, "rm -rf ");
     }
-
-    char command[MAX_COMMAND];
-    memset(command, 0, MAX_COMMAND);
-
-    strcat(command, "rm -rf ");
-    strcat(command, folder);
-    strcat(command, name);
+    else
+    {
+        strcat(command, "rm -f ");
+    }
+    strcat(command, file);
 
     system(command);
     return 0;
@@ -151,60 +182,41 @@ int cgi_rmfolder(const char *folder, const char *name)
   Function:    cgi_mvfile
   Description: move file from src to dst
   Input:
-    (1)srcfolder: The absolute path of the source file's folder
-    (2)srcname  : The name of the source file's name.
-    (3)dstfolder: The absolute path of the destination file's folder
+    (1)srcfile  : The absolute path of the source file
+    (2)dstfolder: The absolute path of the destination file's folder
   Output:
   Return: 0 for succeed, 1 for fail.
   Others:
 *******************************************************************************/
-int cgi_mvfile(const char *srcfolder, const char *srcname,
-               const char *dstfolder)
+int cgi_mvfile(const char *srcfile, const char *dstfolder)
 {
-    if ( ( NULL == srcfolder ) || ( NULL == srcname )
-      || ( NULL == dstfolder ) )
+    /* Check the input */
+    if ( ( NULL == srcfile ) || ( NULL == dstfolder ) )
     {
-        return 1;
+        return -1;
+    }
+
+    /* Check the file existence */
+    if ( 0 != access(srcfile, F_OK) )
+    {
+#if CGIC_LOCAL_TEST
+        printf("No file to move: %s\n", srcfile);
+#endif
+        return -1;
+    }
+    if ( 0 != access(dstfolder, F_OK) )
+    {
+#if CGIC_LOCAL_TEST
+        printf("No dstfolder for file to move: %s\n", dstfolder);
+#endif
+        return -1;
     }
 
     char command[MAX_COMMAND];
     memset(command, 0, MAX_COMMAND);
 
     strcat(command, "mv ");
-    strcat(command, srcfolder);
-    strcat(command, srcname);
-    strcat(command, " ");
-    strcat(command, dstfolder);
-
-    system(command);
-    return 0;
-}
-/******************************************************************************
-  Function:    cgi_mvfolder
-  Description: move folder from src to dst
-  Input:
-    (1)srcfolder: The absolute path of the source folder's folder
-    (2)srcname  : The name of the source file's name.
-    (3)dstfolder: The absolute path of the destination folder's folder
-  Output:
-  Return: 0 for succeed, 1 for fail.
-  Others:
-*******************************************************************************/
-int cgi_mvfolder(const char *srcfolder, const char *srcname,
-                 const char *dstfolder)
-{
-    if ( ( NULL == srcfolder ) || ( NULL == srcname )
-      || ( NULL == dstfolder ) )
-    {
-        return 1;
-    }
-
-    char command[MAX_COMMAND];
-    memset(command, 0, MAX_COMMAND);
-
-    strcat(command, "mv ");
-    strcat(command, srcfolder);
-    strcat(command, srcname);
+    strcat(command, srcfile);
     strcat(command, " ");
     strcat(command, dstfolder);
 
@@ -224,22 +236,25 @@ char *cgi_get_imsi(void)
     memset(imsi, 0, MAX_IMSI);
 
     /* Get the imsi */
+#if CGIC_LOCAL_TEST
     memset(imsi, 65, 15);
-    /*FILE *fp = NULL;
+#else
+    FILE *fp = NULL;
     fp = popen("uci get sim.common_state.imsi", "r");
     if ( NULL == fp )
     {
         return NULL;
     }
     fread(imsi, sizeof(char), MAX_IMSI - 1, fp);
-    pclose(fp);*/
+    pclose(fp);
     
     /* Replace the newline character */
-    /*char *pnewline = strchr(imsi, '\n');
+    char *pnewline = strchr(imsi, '\n');
     if ( pnewline )
     {
         *pnewline = '\0';
-    }*/
+    }
+#endif
 
     if ( 0 == strlen(imsi) )
     {
@@ -263,8 +278,9 @@ char *cgi_get_product_id(void)
     memset(product_id, 0, MAX_PRODUCT_ID);
 
     /* Get the product id */
+#if CGIC_LOCAL_TEST
     memset(product_id, 66, 8);
-    /*
+#else
     FILE *fp = NULL;
     fp = popen("uci get product.info.product_id", "r");
     if ( NULL == fp )
@@ -272,14 +288,15 @@ char *cgi_get_product_id(void)
         return NULL;
     }
     fread(product_id, sizeof(char), MAX_PRODUCT_ID - 1, fp);
-    pclose(fp);*/
+    pclose(fp);
 
     /* Replace the newline character */
-    /*char *pnewline = strchr(product_id, '\n');
+    char *pnewline = strchr(product_id, '\n');
     if ( pnewline )
     {
         *pnewline = '\0';
-    }*/
+    }
+#endif
 
     if ( 0 == strlen(product_id) )
     {
