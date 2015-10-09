@@ -51,7 +51,7 @@ void get_version_no(char *time_buffer);
 
 int is_folder_exist(char *path);
 
-char *cons_file_name(char *IMSI, char *product_id, char *version_no);
+void cons_file_name(char *IMSI, char *product_id, char *version_no, char **file_name);
 #ifdef __cplusplus
 }
 #endif

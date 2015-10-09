@@ -21,14 +21,6 @@
 #include <dirent.h>
 #include "../socket_h/public_handle.h"
 
-/******************************************************************************
- Function:     get_version_no
- Description:  we user this function to give a config version number
- Input:        time_buffer:time_buffer will store the version number
- Output:       NONE
- Return:       NONE
- Others:       NONE
-*******************************************************************************/
 void get_version_no(char *time_buffer)
 {
     char time_tmp[4];
@@ -79,17 +71,6 @@ int is_folder_exist(char *path)
     return 1;
 }
 
-/******************************************************************************
- Function:     cons_file_name
- Description:  we user this function to give a name to backup file
- Input:        IMSI: International Mobile Subscriber Identification number
-               product_id: the id of the product
-               version_no: the version of this backup
-               file_name: the result we want to get
- Output:       NONE
- Return:       NONE
- Others:       NONE
-*******************************************************************************/
 void cons_file_name(char *IMSI, char *product_id, char *version_no, char **file_name)
 {
     int start_pos = 0;

@@ -14,17 +14,18 @@
 *************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../socket_h/public_handle.h"
 
 int main()
 {
-    char filename[512] = {0};
+    char *filename = malloc(512 * sizeof(char));
     char imsi[16] = "asdfghjklqwerty";
     char product_id[9] = "73000001";
     char version_no[15] = "20150912000000";
 
-    strcpy(filename, cons_file_name(imsi, product_id, version_no));
-
-    printf("The file name is %s\n", filename);
+    cons_file_name(imsi, product_id, version_no, &filename);
+    printf("The finial result is %s\n",filename);
     return 0;
 }

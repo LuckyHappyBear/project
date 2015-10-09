@@ -76,10 +76,11 @@ int main()
 
         while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
         {
+            printf("The request is %s\n", recvbuf);
             /* receive check message */
             if (strncmp(recvbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
-                int remain = 10;
+                int remain = 5;
                 char remain_space[REMAIN_FIELD_LEN];
                 sprintf(remain_space, "%d",remain);
                 strncpy(IMSI, &recvbuf[RESPONSE_MARK_LEN],
@@ -92,10 +93,12 @@ int main()
                 send(connfd, sendbuf, strlen(sendbuf), 0);
                 memset(sendbuf, 0, MAXLINE);
                 memset(recvbuf, 0, MAXLINE);
+                break;
             }
             /* receive backup message */
             else if (strncmp(recvbuf, BACKUP_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
+                printf("we reach here or not(backup request.....)\n");
                 /* receive the backup request from client */
                 int start_pos = 3;
                 if (recvbuf[2] == '0')
@@ -118,7 +121,7 @@ int main()
                     strncpy(ver->product_id, &recvbuf[start_pos],
                             PRODUCT_ID_LEN);
                     ver->product_id[PRODUCT_ID_LEN] = '\0';
-                    //printf("the product id is %s,the length is %d\n",ver->product_id,strlen(ver->product_id));
+                    printf("the product id is %s,the length is %d\n",ver->product_id,strlen(ver->product_id));
 
                     /* version_no field */
                     start_pos += PRODUCT_ID_LEN;
@@ -138,8 +141,8 @@ int main()
                 }
                 else if(recvbuf[2] == '1')
                 {
-                    //printf("The recvbuf is %s\n", recvbuf);
-                    //printf("the first recvbuf length is %d\n", strlen(recvbuf));
+                    printf("The recvbuf is %s\n", recvbuf);
+                    printf("the first recvbuf length is %d\n", strlen(recvbuf));
                     char file_path[512] = "/home/luckybear/Documents/alpha.tar";
                     FILE *fp = fopen(file_path, "ab");
                     struct data_transfer *data = malloc(sizeof(*data));
@@ -154,8 +157,8 @@ int main()
                     memset(recvbuf, 0, MAXLINE);
                     while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
                     {
-                        /*printf("1The length is %d\n",strlen(recvbuf));
-                        printf("The recvline is %s\n", recvbuf);*/
+                        printf("1The length is %d\n",strlen(recvbuf));
+                        printf("The recvline is %s\n", recvbuf);
                         if (recvbuf[0] == '1')
                         {
                             printf("**************************************\n");
@@ -179,12 +182,15 @@ int main()
                     if(length < 0)
                     {
                         perror("Transfer error");
+                        break;
                     }
                     else
                     {
                         printf("we reach here?\n");
                         fclose(fp);
+                        break;
                     }
+                    break;
                 }
             }
             /* receive getlist message */
@@ -237,6 +243,7 @@ int main()
                 printf("The sendbuf is %s\n",sendbuf);
                 send(connfd, sendbuf, 4 + length * 3, 0);
                 memset(sendbuf, 0, MAXLINE);
+                break;
             }
             /* receive delete message */
             else if (strncmp(recvbuf, DELETE_RESPONSE, RESPONSE_MARK_LEN) == 0)
@@ -255,6 +262,7 @@ int main()
                 printf("the sendbuf is %s\n", sendbuf);
                 send(connfd, sendbuf, strlen(sendbuf), 0);
                 memset(sendbuf, 0, MAXLINE);
+                break;
             }
             /* receive recover message */
             else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
@@ -358,8 +366,9 @@ int main()
                         }
                         printf("we continue send here\n");
                         memset(file_buffer, 0,FILE_BUFFER_LEN);
-                        memset(sendbuf, 0, MAXLINE); 
+                        memset(sendbuf, 0, MAXLINE);
                     }
+                    break;
                 }
             }
         }

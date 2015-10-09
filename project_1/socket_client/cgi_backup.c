@@ -94,7 +94,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     #endif
     memset(sendline, 0, MAXLINE);
     //printf("the length is %s\n", &sendline[start_pos]);
-    file_path = "/home/luckybear/alpha.tar";
+    //file_path = "/home/luckybear/alpha.tar";
     while (1)
     {
         if (recv(sockfd, recvline, MAXLINE, 0) > 0)

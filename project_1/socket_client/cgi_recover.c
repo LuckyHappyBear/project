@@ -81,7 +81,7 @@ int cgi_recover(int id, char *IP)
                 printf("The recvline is %s\n", recvline);
                 printf("the first recvline length is %d\n", strlen(recvline));
                 #endif
-                char file_path[512] = "/home/luckybear/Documents/test.tar";
+                char file_path[512] = "/tmp/config.tar";
                 FILE *fp = fopen(file_path, "ab");
                 struct data_transfer *data = malloc(sizeof(*data));
                 int length = 0;
