@@ -16,6 +16,8 @@
 #ifndef _DATABASE_H
 #define _DATABASE_H
 
+#include "/usr/local/mysql/include/mysql.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,31 +41,34 @@ MYSQL *mysql_connect_ptr();
  Return:       the list of the backup aimed at the product
  Others:       NONE
 *******************************************************************************/
-struct version_info *getList ( MYSQL *conn_ptr,char *IMSI,char *product_id );
+int getList(MYSQL *conn_ptr, char *IMSI, char *product_id,
+            struct version_info **ver_list);
 
 /******************************************************************************
  Function:     add
  Description:  backup a local config to server
  Input:        IMSI:International Mobile Subscriber Identification Number
-               IP:the server IP
+               conn_ptr:the ptr to connect database
+               version_no:the version of this backup
                product_id: the id of the product
-               note: the note user input
-               file_path: the path of the config
+               note: the note which user writes
  Output:       NONE
  Return:       1:successfule 0:failed
  Others:       NONE
 *******************************************************************************/
-int add (MYSQL *conn_ptr,char *IMSI,char *version_no,char *product_id,char *note,char *file_path);
+int add(MYSQL *conn_ptr,char *IMSI,char *version_no,char *product_id,char *note,char *file_path);
 
 /******************************************************************************
  Function:     query
  Description:  pull a backup from server to local
  Input:        id: the id of this record in database
+               conn_ptr:the ptr to connect database
+               IMSI: imsi
  Output:       NONE
  Return:       1:recover successfully 0:recover failed
  Others:       NONE
 *******************************************************************************/
-char *query(MYSQL *conn_ptr,int id,char *IMSI);
+char *recover(MYSQL *conn_ptr,int id,char *IMSI);
 
 /******************************************************************************
  Function:     delete
@@ -82,12 +87,14 @@ int delete(MYSQL *conn_ptr,int id,char *IMSI);
  Description:  count all the record's amount
  Input:        id: the id of this record in database
                IMSI:the id of the user
-               product_id:the id of product
  Output:       NONE
- Return:       1:delete successful 0:delete failed
+ Return:       the number of the space that user has used
  Others:       NONE
 *******************************************************************************/
-int count(MYSQL *conn_ptr,char *IMSI,char *product_id);
+int count(MYSQL *conn_ptr,char *IMSI);
+
+
+char *IdVsImsi(MYSQL *conn_ptr,int id);
 
 #ifdef __cplusplus
 }

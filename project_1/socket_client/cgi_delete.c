@@ -63,7 +63,8 @@ int cgi_delete(int id, char *IP, char *IMSI)
 
     /* send delete message, request to delete backup version which id is id*/
     strncpy(sendline, CGI_DELETE, DELETE_MARK_LEN);
-    memcpy(&sendline[DELETE_MARK_LEN], &id, sizeof(int));
+    strncpy(&sendline[DELETE_MARK_LEN], IMSI, IMSI_LEN);
+    memcpy(&sendline[DELETE_MARK_LEN + IMSI_LEN], &id, sizeof(int));
     send(sockfd, sendline, strlen(sendline), 0);
 
     while (1)
@@ -80,7 +81,7 @@ int cgi_delete(int id, char *IP, char *IMSI)
             /* server response this request */
             if (strncmp(recvline, DELETE_RESPONSE, DELETE_MARK_LEN) == 0)
             {
-                if (recvline[2] == '1')
+                if (recvline[2] == 'A')
                 {
                     /* delete successful */
                     #if CGI_TEST

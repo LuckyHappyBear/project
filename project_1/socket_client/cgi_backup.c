@@ -165,10 +165,23 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                             sendline[1] = '\0';
                             send(sockfd, sendline, strlen(sendline), 0);
                             memset(sendline, 0, MAXLINE);
+                            memset(recvline, 0, MAXLINE);
                             #if CGI_TEST
                             printf("we finished here\n");
                             #endif
-                            break;
+                            while (recv(sockfd, recvline, MAXLINE, 0) > 0)
+                            {
+                                if(recvline[0] == 'A')
+                                {
+                                    printf("transfer successful\n");
+                                    return 1;
+                                }
+                                else
+                                {
+                                    return -1;
+                                }
+
+                            }
                         }
 
                         if (left_len >= FILE_BUFFER_SIZE)

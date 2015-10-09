@@ -57,7 +57,7 @@ char *get_input_test(void)
 {
     char input[] = "{\"module\":\"backup\","
                     "\"action\":3,"
-                    "\"dbid\":123,"
+                    "\"dbid\":16,"
                     "\"remark\":\"nothing\"}";
     char *pout = (char *)malloc( 1 + sizeof(char) * strlen(input) );
     memset(pout, 0, 1 + sizeof(char) * strlen(input) );
@@ -503,9 +503,11 @@ void action_recover(struct data_from_web *pinfo)
 #if CGIC_LOCAL_TEST
     printf("dbid: %d\n", pinfo->dbid);
 #endif
-    
+    char *imsi = cgi_get_imsi();
+
+
     /* Request file from server */
-    int flag_recover = cgi_recover(pinfo->dbid, SERVER_IP);
+    int flag_recover = cgi_recover(pinfo->dbid, SERVER_IP, imsi);
     /* If recover fail */
     if ( -1 == flag_recover )
     {

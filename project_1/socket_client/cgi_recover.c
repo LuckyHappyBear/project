@@ -26,7 +26,7 @@
 #define SERV_PORT 3000  /* port number */
 #define RECOVER_MARK_LEN 2 /* the length of the check message mark */
 
-int cgi_recover(int id, char *IP)
+int cgi_recover(int id, char *IP, char *IMSI)
 {
     int sockfd;
     struct sockaddr_in servaddr;

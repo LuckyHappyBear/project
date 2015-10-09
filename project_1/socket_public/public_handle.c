@@ -65,20 +65,6 @@ void get_version_no(char *time_buffer)
     printf("the time_buffer is %s\n", time_buffer);
 }
 
-
-/* 0 means doesn't exist
-   1 means exist */
-int is_folder_exist(char *path)
-{
-    DIR *dp;
-    if ((dp = opendir(path)) == NULL)
-    {
-        return 0;
-    }
-    closedir(dp);
-    return 1;
-}
-
 /******************************************************************************
  Function:     cons_file_name
  Description:  we user this function to give a name to backup file
@@ -93,10 +79,11 @@ int is_folder_exist(char *path)
 void cons_file_name(char *IMSI, char *product_id, char *version_no, char **file_name)
 {
     int start_pos = 0;
-    memset((*file_name), 0, 512);
 
     strncpy((*file_name), IMSI, strlen(IMSI));
     start_pos += strlen(IMSI);
+
+    printf("cons_file_name:the imsi is %s\n", IMSI);
 
     printf("The filename is %s\n", (*file_name));
 
@@ -113,5 +100,8 @@ void cons_file_name(char *IMSI, char *product_id, char *version_no, char **file_
     printf("The filename is %s\n", (*file_name));
 
     strncpy(&((*file_name)[start_pos]), version_no, strlen(version_no));
+    start_pos += strlen(version_no);
+
+    strncpy(&((*file_name)[start_pos]), ".tar", strlen(".tar"));
     printf("The filename is %s\n", (*file_name));
 }

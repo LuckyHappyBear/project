@@ -66,7 +66,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
  Return:       1:recover successfully -1:recover failed
  Others:       NONE
 *******************************************************************************/
-int cgi_recover(int id, char *IP);
+int cgi_recover(int id, char *IP, char *IMSI);
 
 /******************************************************************************
  Function:     cgi_delete
