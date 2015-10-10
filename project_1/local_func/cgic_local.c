@@ -237,7 +237,7 @@ char *cgi_get_imsi(void)
 
     /* Get the imsi */
 #if CGIC_LOCAL_TEST
-    memset(imsi, 65, 15);
+    memset(imsi, 65, 8);
 #else
     FILE *fp = NULL;
     fp = popen("uci get sim.common_state.imsi", "r");
@@ -247,7 +247,7 @@ char *cgi_get_imsi(void)
     }
     fread(imsi, sizeof(char), MAX_IMSI - 1, fp);
     pclose(fp);
-    
+
     /* Replace the newline character */
     char *pnewline = strchr(imsi, '\n');
     if ( pnewline )

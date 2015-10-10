@@ -65,7 +65,7 @@ int cgi_delete(int id, char *IP, char *IMSI)
     strncpy(sendline, CGI_DELETE, DELETE_MARK_LEN);
     strncpy(&sendline[DELETE_MARK_LEN], IMSI, IMSI_LEN);
     memcpy(&sendline[DELETE_MARK_LEN + IMSI_LEN], &id, sizeof(int));
-    send(sockfd, sendline, strlen(sendline), 0);
+    send(sockfd, sendline, (DELETE_MARK_LEN + IMSI_LEN + sizeof(int)), 0);
 
     while (1)
     {
@@ -92,6 +92,9 @@ int cgi_delete(int id, char *IP, char *IMSI)
                 else
                 {
                     /* delete failed */
+                    #if CGI_TEST
+                    printf("delete failed\n");
+                    #endif
                     return -1;
                 }
             }

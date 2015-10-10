@@ -116,7 +116,7 @@ int main()
 
                 memset(sendbuf, 0, MAXLINE);
                 memset(recvbuf, 0, MAXLINE);
-
+                memset(IMSI, 0, IMSI_LEN);
                 break;
             }
             /* receive backup message */
@@ -131,7 +131,7 @@ int main()
                     /* assign every struct field */
                     /* IMSI field */
                     strncpy(ver->imsi, &recvbuf[start_pos],IMSI_LEN);
-                    ver->imsi[IMSI_LEN] = '\0';
+                    //ver->imsi[IMSI_LEN] = '\0';
                     //printf("the imsi is %s,the length is %d\n",ver->imsi,strlen(ver->imsi));
                     /* product_id field */
                     start_pos += IMSI_LEN;
@@ -272,6 +272,7 @@ int main()
                 }
                 send(connfd, sendbuf, 4 + length * list_num, 0);
                 memset(sendbuf, 0, MAXLINE);
+                memset(IMSI, 0, IMSI_LEN);
                 break;
             }
             /* receive delete message */
@@ -315,24 +316,34 @@ int main()
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                 }
                 memset(sendbuf, 0, MAXLINE);
+                memset(IMSI, 0, IMSI_LEN);
                 break;
             }
             /* receive recover message */
             else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 int id;
+                /* get the IMSI */
+                strncpy(IMSI, &recvbuf[2], IMSI_LEN);
                 /* get the id in database */
-                memcpy(&id, &recvbuf[2], sizeof(int));
+                memcpy(&id, &recvbuf[2 + IMSI_LEN], sizeof(int));
                 char file_path[512];
 
                 memset(file_path, 0, 512);
-                strcpy(file_path, "/home/luckybear/alpha.tar");
+                memset(sendbuf, 0, MAXLINE);
+                strcpy(file_path, recover(conn_ptr, id, IMSI));
+                printf("The file_path is %s\n", file_path);
 
                 FILE *fp = fopen(file_path,"rb");
                 struct data_transfer *data = malloc(sizeof(*data));
                 if(NULL == fp)
                 {
                     printf("File Not Found\n");
+                    strncpy(sendbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN);
+                    sendbuf[2] = 'B';
+                    send(connfd, sendbuf, strlen(sendbuf), 0);
+                    memset(sendbuf, 0, MAXLINE);
+                    break;
                 }
                 else
                 {
@@ -352,8 +363,8 @@ int main()
                     /* the length we have not read */
                     int left_len = total_bytes;
 
-                    memset(sendbuf, 0, MAXLINE);
                     strncpy(sendbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN);
+                    sendbuf[2] = 'A';
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
 

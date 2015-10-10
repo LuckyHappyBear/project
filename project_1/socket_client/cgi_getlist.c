@@ -78,7 +78,7 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
     printf("the sendbuf is %s\n",sendline);
     printf("the send product_id is %s\n", &sendline[start_pos]);
 
-    send(sockfd, sendline, strlen(sendline), 0);
+    send(sockfd, sendline, start_pos +  PRODUCT_ID_LEN, 0);
     #if CGI_TEST
     printf("the sendline is %s\n",sendline);
     #endif

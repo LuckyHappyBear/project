@@ -21,6 +21,7 @@
 #include <string.h>
 #include "../socket_h/cgic_client.h"
 #include "../socket_h/message.h"
+#include "../socket_h/public_handle.h"
 
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
@@ -60,8 +61,9 @@ int cgi_recover(int id, char *IP, char *IMSI)
     }
 
     strncpy(sendline, CGI_RECOVER, RECOVER_MARK_LEN);
-    memcpy(&sendline[RECOVER_MARK_LEN],&id, sizeof(int));
-    send(sockfd, sendline, strlen(sendline), 0);
+    strncpy(&sendline[RECOVER_MARK_LEN], IMSI, IMSI_LEN);
+    memcpy(&sendline[RECOVER_MARK_LEN + IMSI_LEN], &id, sizeof(int));
+    send(sockfd, sendline, RECOVER_MARK_LEN + IMSI_LEN + sizeof(int), 0);
 
     while (1)
     {
@@ -77,6 +79,12 @@ int cgi_recover(int id, char *IP, char *IMSI)
             /* server response this request */
             if (strncmp(recvline, RECOVER_RESPONSE, RECOVER_MARK_LEN) == 0)
             {
+                if (recvline[2] == 'B')
+                {
+                    printf("recover failed\n");
+                    return -1;
+                }
+
                 #if CGI_TEST
                 printf("The recvline is %s\n", recvline);
                 printf("the first recvline length is %d\n", strlen(recvline));

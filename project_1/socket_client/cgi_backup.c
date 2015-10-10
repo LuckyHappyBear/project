@@ -85,10 +85,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     start_pos += VERSION_NUM_LEN;
     strncpy(&sendline[start_pos], note, strlen(note));
 
-    /* field length field */
-    /*start_pos += MAX_NOTE_LEN;
-    strncpy(&sendline[start_pos], file_size, strlen(file_size));*/
-    send(sockfd, sendline, strlen(sendline), 0);
+    send(sockfd, sendline, start_pos + strlen(note), 0);
     #if CGI_TEST
     printf("the sendline is %s\n",sendline);
     #endif

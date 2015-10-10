@@ -93,8 +93,9 @@ int getList (MYSQL *conn_ptr,char *IMSI,char *product_id, struct version_info **
            		mark = count++;
             	(*ver_list)[mark].id = atoi(sqlrow[0]);
             	strcpy((*ver_list)[mark].imsi,sqlrow[1]);
-            	strcpy((*ver_list)[mark].product_id,sqlrow[2]);
-            	strcpy((*ver_list)[mark].note,sqlrow[3]);
+            	strcpy((*ver_list)[mark].version_no,sqlrow[2]);
+            	strcpy((*ver_list)[mark].product_id,sqlrow[3]);
+            	strcpy((*ver_list)[mark].note,sqlrow[4]);
             }
 
             if (mysql_errno(conn_ptr))
@@ -161,7 +162,7 @@ char *recover(MYSQL *conn_ptr,int id,char *IMSI)
     if (res)
     {
         printf("SELECT error:%s\n",mysql_error(conn_ptr));
-        return "0";
+        return NULL;
     }
     else
     {
@@ -294,6 +295,10 @@ int delete(MYSQL *conn_ptr,int id,char *IMSI)
     {
         free(s);
         printf("delete %lu rows\n",(unsigned long)mysql_affected_rows(conn_ptr));
+        if ((unsigned long)mysql_affected_rows(conn_ptr) == 0)
+        {
+            return 0;
+        }
     }
     else
   	{

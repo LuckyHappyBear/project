@@ -64,7 +64,7 @@ int cgi_check(char *IMSI, char *IP)
 
     strncpy(sendline, CGI_CHECK, CHECK_MARK_LEN);
     strncpy(&sendline[CHECK_MARK_LEN], IMSI, strlen(IMSI));
-    send(sockfd, sendline, strlen(sendline), 0);
+    send(sockfd, sendline, CHECK_MARK_LEN + strlen(IMSI), 0);
 
     while (1)
     {
