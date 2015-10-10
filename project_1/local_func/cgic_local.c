@@ -28,7 +28,7 @@
 #define MAX_SERVER_IP  20
 #define MAX_IP         20
 
-#define SERVER_IP_DEFAULT "127.0.0.1"
+#define SERVER_IP_DEFAULT "192.168.45.132"
 #define SERVER_IP_FILE    "/app/config/backup.conf"
 
 static char imsi[MAX_IMSI] = {0};
