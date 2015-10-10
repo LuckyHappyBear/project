@@ -42,7 +42,6 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
 {
     int sockfd;
     int start_pos;          /* count every field's start position */
-    int return_code;
     char version_no[14];
     struct sockaddr_in servaddr;
     char sendline[MAXLINE], recvline[MAXLINE];
@@ -91,7 +90,7 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
     printf("the sendbuf is %s\n",sendline);
     printf("the send product_id is %s\n", &sendline[start_pos]);
     #endif
-
+    /* send request information to server */
     send(sockfd, sendline, start_pos +  PRODUCT_ID_LEN, 0);
 
     #if CGI_TEST
@@ -129,28 +128,21 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
                 printf("The list_num is %d\n",list_num);
                 #endif
 
+                /* get the list that server return */
                 for (i = 0; i < list_num; i ++)
                 {
                     memcpy(&(*ver_list)[i], &recvline[start_pos], length);
                     start_pos += length;
                 }
 
-
-
-                /* we neet to release this space in somewhere,do not forget */
-                //for(i = 0; i < list_num; i ++)
-                //{
-                //    printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",(*ver_list)[i].id, (*ver_list)[i].imsi,(*ver_list)[i].product_id, (*ver_list)[i].version_no, (*ver_list)[i].note);
-                //}
                 return list_num;
             }
             else
             {
                 /* server doesn't response this request */
-                return_code = -1;
                 memset(&sendline, 0, MAXLINE);
                 memset(&recvline, 0, MAXLINE);
-                return return_code;
+                return -1;
             }
         }
         else

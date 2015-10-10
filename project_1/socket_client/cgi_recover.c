@@ -69,10 +69,12 @@ int cgi_recover(int id, char *IP, char *IMSI)
         return -1;
     }
 
+    /* send the recover information to server */
     strncpy(sendline, CGI_RECOVER, RECOVER_MARK_LEN);
     strncpy(&sendline[RECOVER_MARK_LEN], IMSI, IMSI_LEN);
     memcpy(&sendline[RECOVER_MARK_LEN + IMSI_LEN], &id, sizeof(int));
     send(sockfd, sendline, RECOVER_MARK_LEN + IMSI_LEN + sizeof(int), 0);
+    memset(sendline, 0, MAXLINE);
 
     while (1)
     {
@@ -104,6 +106,7 @@ int cgi_recover(int id, char *IP, char *IMSI)
                 int length = 0;
                 memset(recvline, 0, MAXLINE);
                 memset(sendline, 0, MAXLINE);
+                /* send server a information that client is ready to receive */
                 sendline[0] = '1';
                 sendline[1] = '0';
                 send(sockfd, sendline, 2, 0);
@@ -112,9 +115,11 @@ int cgi_recover(int id, char *IP, char *IMSI)
                 {
                     //printf("1The length is %d\n",strlen(recvline));
                     //printf("The recvline is %s\n", recvline);
+                    /* receive the data */
                     if (recvline[0] == '1')
                     {
                         memcpy(data, &recvline[1], sizeof(*data));
+                        /* write failed */
                         if (fwrite(data->buffer, 1, data->length, fp) < 0)
                         {
                             #if CGI_TEST
@@ -129,23 +134,27 @@ int cgi_recover(int id, char *IP, char *IMSI)
                         #if CGI_TEST
                         printf("we reach here to send something\n");
                         #endif
+                        /* send a message tell server that you can send the next buffer */
                         sendline[0] = '1';
                         sendline[1] = '\0';
                         #if CGI_TEST
                         printf("the sendline is %s\n", sendline);
                         #endif
                         send(sockfd, sendline, 2, 0);
+                        memset(sendline, 0, MAXLINE);
                     }
                     else
                     {
                         break;
                     }
                 }
+                /* recv error */
                 if(length < 0)
                 {
                     free(data);
                     return -1;
                 }
+                /* send over and successfully */
                 else
                 {
                     #if CGI_TEST

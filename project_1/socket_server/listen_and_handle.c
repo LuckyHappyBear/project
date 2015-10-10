@@ -80,11 +80,18 @@ int main()
         /* accept a connection */
         connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
 
+        /* file_name we will use */
         char *file_name = malloc(256 * sizeof(char));
         memset(file_name, 0, 256);
+        if (NULL == file_name)
+        {
+            perror("spcace allocate failed\n");
+        }
+
+        /* the struct store version information */
         struct version_info* ver = malloc(sizeof(*ver));
         memset(ver, 0, sizeof(struct version_info));
-        if(NULL == ver)
+        if (NULL == ver)
         {
             perror("space allocate failed\n");
         }
@@ -109,11 +116,13 @@ int main()
                 char used_space[USED_FIELD_LEN];
                 sprintf(used_space, "%d", used);
 
+                /* send check request to server */
                 strncpy(sendbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN);
                 strncpy(&sendbuf[RESPONSE_MARK_LEN], used_space,
                         USED_FIELD_LEN);
                 send(connfd, sendbuf, strlen(sendbuf), 0);
 
+                /* clear the array */
                 memset(sendbuf, 0, MAXLINE);
                 memset(recvbuf, 0, MAXLINE);
                 memset(IMSI, 0, IMSI_LEN);
@@ -123,16 +132,19 @@ int main()
             else if (strncmp(recvbuf, BACKUP_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 //printf("we reach here or not(backup request.....)\n");
-                /* receive the backup request from client */
                 char file_path[512];
+                /* receive the backup request from client */
                 if (recvbuf[2] == '0')
                 {
                     int start_pos = 3;
+
                     /* assign every struct field */
                     /* IMSI field */
                     strncpy(ver->imsi, &recvbuf[start_pos],IMSI_LEN);
+
                     //ver->imsi[IMSI_LEN] = '\0';
                     //printf("the imsi is %s,the length is %d\n",ver->imsi,strlen(ver->imsi));
+
                     /* product_id field */
                     start_pos += IMSI_LEN;
                     strncpy(ver->product_id, &recvbuf[start_pos],
@@ -143,15 +155,20 @@ int main()
                     /* version_no field */
                     start_pos += PRODUCT_ID_LEN;
                     strncpy(ver->version_no, &recvbuf[start_pos],
-                           VERSION_NUM_LEN);
+                            VERSION_NUM_LEN);
                     ver->version_no[VERSION_NUM_LEN] = '\0';
 
                     /* note field */
                     start_pos += VERSION_NUM_LEN;
                     strncpy(ver->note, &recvbuf[start_pos], MAX_NOTE_LEN);
                     ver->note[strlen(ver->note)] = '\0';
+
                     printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
+
+                    /* use this informaion to construct file's name */
                     cons_file_name(ver->imsi, ver->product_id, ver->version_no, &file_name);
+
+                    /* send message to client that server receive this request */
                     strncpy(sendbuf,BACKUP_RESPONSE,RESPONSE_MARK_LEN);
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
@@ -161,6 +178,7 @@ int main()
                 {
                     printf("The recvbuf is %s\n", recvbuf);
                     //printf("the first recvbuf length is %d\n", strlen(recvbuf));
+
                     /* get the storage location */
                     memset(file_path, 0, 512);
                     strncat(file_path, LOCATION, strlen(LOCATION));
@@ -173,15 +191,18 @@ int main()
                     int length = 0;
                     memset(recvbuf, 0, MAXLINE);
                     memset(sendbuf, 0, MAXLINE);
+
+                    /* tell client that you can send data */
                     sendbuf[0] = '1';
                     sendbuf[1] = '\0';
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
                     memset(recvbuf, 0, MAXLINE);
+
+                    /* begin to receive and write the data */
                     while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
                     {
-                        printf("1The length is %d\n",strlen(recvbuf));
-                        printf("The recvline is %s\n", recvbuf);
+                        /* receive data */
                         if (recvbuf[0] == '1')
                         {
                             //printf("**************************************\n");
@@ -193,6 +214,8 @@ int main()
                             memset(data->buffer, 0, FILE_BUFFER_SIZE);
                             memset(sendbuf, 0, MAXLINE);
                             printf("we reach here to send something\n");
+
+                            /* send message to tell client to send next data buffer */
                             sendbuf[0] = '1';
                             sendbuf[1] = '\0';
                             printf("the sendline is %s\n", sendbuf);
@@ -210,13 +233,17 @@ int main()
                     }
                     else
                     {
+                        /* receive successful and write completely */
                         printf("we reach here?\n");
                         fclose(fp);
                         printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
                         printf("The file_path is %s\n", file_path);
+
+                        /* add ro database successful */
                         if (add(conn_ptr, ver->imsi, ver->version_no,
                                 ver->product_id, ver->note, file_path))
                         {
+                            /* send successful message to client */
                             memset(sendbuf, 0, MAXLINE);
                             sendbuf[0] = 'A';
                             sendbuf[1] = '\0';
@@ -224,6 +251,7 @@ int main()
                         }
                         else
                         {
+                            /* send failed message to client */
                             memset(sendbuf, 0, MAXLINE);
                             sendbuf[0] = 'B';
                             sendbuf[1] = '\0';

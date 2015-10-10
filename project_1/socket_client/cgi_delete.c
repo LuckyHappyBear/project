@@ -76,6 +76,7 @@ int cgi_delete(int id, char *IP, char *IMSI)
     strncpy(&sendline[DELETE_MARK_LEN], IMSI, IMSI_LEN);
     memcpy(&sendline[DELETE_MARK_LEN + IMSI_LEN], &id, sizeof(int));
     send(sockfd, sendline, (DELETE_MARK_LEN + IMSI_LEN + sizeof(int)), 0);
+    memset(sendline, 0, MAXLINE);
 
     while (1)
     {
