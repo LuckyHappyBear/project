@@ -55,7 +55,7 @@
 char *get_input_test(void)
 {
     char input[] = "{\"module\":\"backup\","
-                    "\"action\":3,"
+                    "\"action\":1,"
                     "\"dbid\":22,"
                     "\"remark\":\"nothing\"}";
     char *pout = (char *)malloc( 1 + sizeof(char) * strlen(input) );

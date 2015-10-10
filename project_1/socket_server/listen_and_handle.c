@@ -159,7 +159,7 @@ int main()
                 }
                 else if(recvbuf[2] == '1')
                 {
-                    //printf("The recvbuf is %s\n", recvbuf);
+                    printf("The recvbuf is %s\n", recvbuf);
                     //printf("the first recvbuf length is %d\n", strlen(recvbuf));
                     /* get the storage location */
                     memset(file_path, 0, 512);
@@ -180,8 +180,8 @@ int main()
                     memset(recvbuf, 0, MAXLINE);
                     while ((length = recv(connfd, recvbuf, MAXLINE, 0)) > 0)
                     {
-                        //printf("1The length is %d\n",strlen(recvbuf));
-                        //printf("The recvline is %s\n", recvbuf);
+                        printf("1The length is %d\n",strlen(recvbuf));
+                        printf("The recvline is %s\n", recvbuf);
                         if (recvbuf[0] == '1')
                         {
                             //printf("**************************************\n");
@@ -192,10 +192,11 @@ int main()
                             memset(recvbuf, 0, MAXLINE);
                             memset(data->buffer, 0, FILE_BUFFER_SIZE);
                             memset(sendbuf, 0, MAXLINE);
-                            //printf("we reach here to send something\n");
+                            printf("we reach here to send something\n");
                             sendbuf[0] = '1';
-                            //printf("the sendline is %s\n", sendbuf);
-                            send(connfd, sendbuf, MAXLINE, 0);
+                            sendbuf[1] = '\0';
+                            printf("the sendline is %s\n", sendbuf);
+                            send(connfd, sendbuf, 2, 0);
                         }
                         else
                         {
@@ -219,14 +220,14 @@ int main()
                             memset(sendbuf, 0, MAXLINE);
                             sendbuf[0] = 'A';
                             sendbuf[1] = '\0';
-                            send(connfd, sendbuf, MAXLINE, 0);
+                            send(connfd, sendbuf, 2, 0);
                         }
                         else
                         {
                             memset(sendbuf, 0, MAXLINE);
                             sendbuf[0] = 'B';
                             sendbuf[1] = '\0';
-                            send(connfd, sendbuf, MAXLINE, 0);
+                            send(connfd, sendbuf, 2, 0);
                         }
                         memset(recvbuf, 0, MAXLINE);
                         memset(sendbuf, 0, MAXLINE);

@@ -81,17 +81,23 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
     strncpy(&sendline[GETLIST_MARK_LEN], IMSI, IMSI_LEN);
 
     /* product_id field */
+    #if CGI_TEST
     printf("The product_id is %s\n",product_id);
+    #endif
     start_pos = GETLIST_MARK_LEN + IMSI_LEN;
     strncpy(&sendline[start_pos], product_id, PRODUCT_ID_LEN);
 
+    #if CGI_TEST
     printf("the sendbuf is %s\n",sendline);
     printf("the send product_id is %s\n", &sendline[start_pos]);
+    #endif
 
     send(sockfd, sendline, start_pos +  PRODUCT_ID_LEN, 0);
+
     #if CGI_TEST
     printf("the sendline is %s\n",sendline);
     #endif
+
     memset(sendline, 0, MAXLINE);
     //printf("the length is %s\n", &sendline[start_pos]);
     while (1)
@@ -107,15 +113,18 @@ int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ve
                 int list_num;
 
                 int length = sizeof(struct version_info);
+
                 #if CGI_TEST
                 printf("The length is %d\n",length);
                 #endif
+
                 /* get the number of backup version */
                 char list[2];
                 strncpy(list, &recvline[2], 2);
                 list_num = atoi(list);
                 (*ver_list) = malloc(list_num * sizeof(struct version_info));
                 start_pos = 4;
+
                 #if CGI_TEST
                 printf("The list_num is %d\n",list_num);
                 #endif

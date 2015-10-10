@@ -103,10 +103,10 @@ int cgi_recover(int id, char *IP, char *IMSI)
                 struct data_transfer *data = malloc(sizeof(*data));
                 int length = 0;
                 memset(recvline, 0, MAXLINE);
-
                 memset(sendline, 0, MAXLINE);
                 sendline[0] = '1';
-                send(sockfd, sendline, MAXLINE, 0);
+                sendline[1] = '0';
+                send(sockfd, sendline, 2, 0);
 
                 while ((length = recv(sockfd, recvline, MAXLINE, 0)) > 0)
                 {
@@ -120,6 +120,7 @@ int cgi_recover(int id, char *IP, char *IMSI)
                             #if CGI_TEST
                             printf("File Write failed.\n");
                             #endif
+                            free(data);
                             return -1;
                         }
                         memset(recvline, 0, MAXLINE);
@@ -129,10 +130,11 @@ int cgi_recover(int id, char *IP, char *IMSI)
                         printf("we reach here to send something\n");
                         #endif
                         sendline[0] = '1';
+                        sendline[1] = '\0';
                         #if CGI_TEST
                         printf("the sendline is %s\n", sendline);
                         #endif
-                        send(sockfd, sendline, MAXLINE, 0);
+                        send(sockfd, sendline, 2, 0);
                     }
                     else
                     {
@@ -141,6 +143,7 @@ int cgi_recover(int id, char *IP, char *IMSI)
                 }
                 if(length < 0)
                 {
+                    free(data);
                     return -1;
                 }
                 else
@@ -149,6 +152,7 @@ int cgi_recover(int id, char *IP, char *IMSI)
                     printf("we reach here?\n");
                     #endif
                     fclose(fp);
+                    free(data);
                     return 1;
                 }
             }

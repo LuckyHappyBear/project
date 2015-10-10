@@ -118,6 +118,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                 /* send request that client will send data */
                 strncpy(sendline, CGI_BACKUP, BACKUP_MARK_LEN);
                 sendline[2] = '1';
+                sendline[3] = '\0';
                 send(sockfd, sendline, strlen(sendline), 0);
 
                 memset(sendline, 0, MAXLINE);
@@ -188,7 +189,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                             memset(sendline, 0, MAXLINE);
                             sendline[0] = '0';
                             sendline[1] = '\0';
-                            send(sockfd, sendline, strlen(sendline), 0);
+                            send(sockfd, sendline, 2, 0);
 
                             memset(sendline, 0, MAXLINE);
                             memset(recvline, 0, MAXLINE);
