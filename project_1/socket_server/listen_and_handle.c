@@ -242,7 +242,7 @@ int main()
                         printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
                         printf("The file_path is %s\n", file_path);
 
-                        /* add ro database successful */
+                        /* add to database successful */
                         if (add(conn_ptr, ver->imsi, ver->version_no,
                                 ver->product_id, ver->note, file_path))
                         {
@@ -274,18 +274,27 @@ int main()
             else if (strncmp(recvbuf, GETLIST_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 printf("************getlist function*************\n");
+                /* the number of backup */
                 int list_num;
+
+                /* the size of struct version_info */
                 int length = sizeof(struct version_info);
+
+                /* the product id */
                 char product_id[PRODUCT_ID_LEN + 1];
                 printf("the recvbuf is %s\n",recvbuf);
                 memset(IMSI, 0, strlen(IMSI));
+
+                /* get IMSI from client */
                 strncpy(IMSI, &recvbuf[2], IMSI_LEN);
                 IMSI[strlen(IMSI)] = '\0';
-                printf("the protadsfasdf is %s\n", &recvbuf[17]);
+
+                /* get the product_id from client */
                 strncpy(product_id, &recvbuf[2 + IMSI_LEN], PRODUCT_ID_LEN);
                 product_id[PRODUCT_ID_LEN] = '\0';
                 printf("The IMSI is %s\nThe product_id is %s\n", IMSI, product_id);
 
+                /* get verion list */
                 struct version_info *ver_list;
                 list_num = getList(conn_ptr, IMSI, product_id, &ver_list);
                 printf("the number of backup is %d\n", list_num);
@@ -296,6 +305,7 @@ int main()
                     printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver_list[i].id, ver_list[i].imsi,ver_list[i].product_id, ver_list[i].version_no, ver_list[i].note);
                 }
 
+                /* send version list and version number to client */
                 memset(sendbuf, 0, MAXLINE);
                 strncpy(sendbuf, GETLIST_RESPONSE, RESPONSE_MARK_LEN);
                 sprintf(&sendbuf[2], "%.2d", list_num);
@@ -312,9 +322,11 @@ int main()
             else if (strncmp(recvbuf, DELETE_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 printf("************delete function*************\n");
+
+                /* the id in database */
                 int id;
-                char *id_imsi;
                 int  del_result;
+                /* the backup file's storage path */
                 char file_path[512];
                 memset(file_path, 0, 512);
                 memset(IMSI, 0, IMSI_LEN + 1);
@@ -325,9 +337,11 @@ int main()
 
 
                 /* we do delete operations here */
-                printf("***************************\n");
+                /* get the path and remove the backup file */
                 strcpy(file_path, recover(conn_ptr, id, IMSI));
                 remove(file_path);
+
+                /* delete the row from database */
                 del_result = delete(conn_ptr, id, IMSI);
                 printf("The file_path is %s\n",file_path);
                 printf("***************************\n");
@@ -357,13 +371,17 @@ int main()
             else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
                 printf("************recover function*************\n");
+                /* the id in database */
                 int id;
+
                 /* get the IMSI */
                 strncpy(IMSI, &recvbuf[2], IMSI_LEN);
+
                 /* get the id in database */
                 memcpy(&id, &recvbuf[2 + IMSI_LEN], sizeof(int));
-                char file_path[512];
 
+                /* get file path from database */
+                char file_path[512];
                 memset(file_path, 0, 512);
                 memset(sendbuf, 0, MAXLINE);
                 strcpy(file_path, recover(conn_ptr, id, IMSI));
@@ -398,11 +416,13 @@ int main()
                     /* the length we have not read */
                     int left_len = total_bytes;
 
+                    /* find file successful and ready to send */
                     strncpy(sendbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN);
                     sendbuf[2] = 'A';
                     send(connfd, sendbuf, strlen(sendbuf), 0);
                     memset(sendbuf, 0, MAXLINE);
 
+                    /* wait for client's response */
                     while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
                     {
                         if(recvbuf[0] == '1')
@@ -413,6 +433,7 @@ int main()
 
                     while (1)
                     {
+                        /* read file finished */
                         if ((left_len <= 0) || (read_len >= total_bytes))
                         {
                             fclose(fp);
@@ -426,6 +447,7 @@ int main()
                             break;
                         }
 
+                        /* left file length larger than FILE_BUFFER_SIZE */
                         if (left_len >= FILE_BUFFER_SIZE)
                         {
                             memset(data->buffer, 0, FILE_BUFFER_SIZE);
@@ -436,6 +458,7 @@ int main()
                             read_len += length;
                             printf("The read_len is %d\n", read_len);
                         }
+                        /* left file length shorter than FILE_BUFFER_SIZE */
                         else
                         {
                             memset(data->buffer, 0, FILE_BUFFER_SIZE);
@@ -448,6 +471,7 @@ int main()
 
                         left_len = total_bytes - read_len;
 
+                        /* send the data to client */
                         sendbuf[0] = '1';
                         memcpy(&sendbuf[1], data, sizeof(*data));
                         /*printf("The length is %d\n",strlen(sendbuf));
@@ -460,6 +484,7 @@ int main()
                         else
                         {
                             printf("we reach here to wait for response\n");
+                            /* wait for response */
                             memset(recvbuf, 0, MAXLINE);
                             while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
                             {
