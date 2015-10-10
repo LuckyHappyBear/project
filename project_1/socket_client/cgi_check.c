@@ -26,8 +26,17 @@
 #define MAXLINE 4096  /* the maxline of the buffer */
 #define SERV_PORT 3000  /* port number */
 #define CHECK_MARK_LEN 2 /* the length of the check message mark */
-#define REMAIN_FIELD_LEN 2 /* the length remian space field */
+#define USED_FIELD_LEN 2 /* the length remian space field */
 
+/******************************************************************************
+ Function:     cgi_check
+ Description:  check the space user used in server
+ Input:        IMSI:International Mobile Subscriber Identification Number
+               IP:the server IP
+ Output:       NONE
+ Return:       the amount of the backups
+ Others:       NONE
+*******************************************************************************/
 int cgi_check(char *IMSI, char *IP)
 {
     int sockfd;
@@ -62,9 +71,11 @@ int cgi_check(char *IMSI, char *IP)
         return -1;
     }
 
+    /* send check request and IMSI to server */
     strncpy(sendline, CGI_CHECK, CHECK_MARK_LEN);
     strncpy(&sendline[CHECK_MARK_LEN], IMSI, strlen(IMSI));
     send(sockfd, sendline, CHECK_MARK_LEN + strlen(IMSI), 0);
+    memset(sendline, 0, MAXLINE);
 
     while (1)
     {
@@ -80,9 +91,10 @@ int cgi_check(char *IMSI, char *IP)
             /* server response this request */
             if (strncmp(recvline, CHECK_RESPONSE, CHECK_MARK_LEN) == 0)
             {
-                char remain_space[REMAIN_FIELD_LEN];
-                strncpy(remain_space, &recvline[CHECK_MARK_LEN], REMAIN_FIELD_LEN);
-                return_code = atoi(remain_space);
+                /* get the */
+                char used_space[USED_FIELD_LEN];
+                strncpy(used_space, &recvline[CHECK_MARK_LEN], USED_FIELD_LEN);
+                return_code = atoi(used_space);
                 #if CGI_TEST
                 printf("the recvline is %s\n", recvline);
                 #endif

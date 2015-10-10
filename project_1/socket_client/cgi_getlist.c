@@ -28,6 +28,16 @@
 #define SERV_PORT 3000  /* port number */
 #define GETLIST_MARK_LEN 2 /* the length of the check message mark */
 
+/******************************************************************************
+ Function:     cgi_getlist
+ Description:  get the the user's  backup list aimed at a product
+ Input:        IMSI:International Mobile Subscriber Identification Number
+               IP:the server IP
+               product_id: the id of the product
+ Output:       NONE
+ Return:       the list of the backup aimed at the product
+ Others:       NONE
+*******************************************************************************/
 int cgi_getlist(char *IMSI, char *IP, char *product_id, struct version_info **ver_list)
 {
     int sockfd;

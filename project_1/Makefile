@@ -26,7 +26,7 @@ $(ObjLocal):%.o:%.c
 $(ObjMain):%.o:%.c
 	gcc -c $< -o $@
 
-cJSON.o:cJSON.c 
+cJSON.o:cJSON.c
 	gcc -c $< -o $@
 
 .PHONY:clean

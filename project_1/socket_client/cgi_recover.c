@@ -27,6 +27,15 @@
 #define SERV_PORT 3000  /* port number */
 #define RECOVER_MARK_LEN 2 /* the length of the check message mark */
 
+/******************************************************************************
+ Function:     cgi_recover
+ Description:  pull a backup from server to local
+ Input:        id: the id of this record in database
+               IP:the server IP
+ Output:       NONE
+ Return:       1:recover successfully -1:recover failed
+ Others:       NONE
+*******************************************************************************/
 int cgi_recover(int id, char *IP, char *IMSI)
 {
     int sockfd;

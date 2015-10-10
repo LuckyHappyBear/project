@@ -22,31 +22,37 @@
 #define WEB_ACTION "action"
 #define WEB_REMARK "remark"
 #define WEB_DBID   "dbid"
+#define WEB_IP     "ip"
 /* Data from web: Action */
 #define ACTION_GETLIST 0
 #define ACTION_BACKUP  1
 #define ACTION_RECOVER 2
 #define ACTION_DELETE  3
+#define ACTION_SETIP   4
+#define ACTION_GETIP   5
 /* Data structure from web to CGI */
 #define MAX_REMARK 100
 #define MAX_MODULE 100
+#define MAX_IP     20
 struct data_from_web
 {
     int  action;
     int  dbid;
     char module[MAX_MODULE];
     char remark[MAX_REMARK];
+    char ip[MAX_IP]
 };
 
 /* Data from CGI to web */
 #define TOWEB_ACTION      "action"
-#define TOWEB_STATUS      "status" 
+#define TOWEB_RESULT      "result"
 #define TOWEB_USEDVOLUME  "usedvolume"
 #define TOWEB_FULLVOLUME  "fullvolume"
 #define TOWEB_ITEM        "item"
 #define TOWEB_DBID        "dbid"
 #define TOWEB_TIMESTAMP   "timestamp"
 #define TOWEB_REMARK      "remark"
+#define TOWEB_IP          "ip"
 
 #ifdef __cplusplus
 extern "C" {
@@ -135,6 +141,26 @@ void action_recover(struct data_from_web *pinfo);
   Others:
 *******************************************************************************/
 void action_delete(struct data_from_web *pinfo);
+/******************************************************************************
+  Function:    action_setip
+  Description: Deal with "setip" request from web
+  Input:
+    (1)pinfo: A pointer to the structure storing the data from web
+  Output:
+  Return:
+  Others:
+*******************************************************************************/
+void action_setip(struct data_from_web *pinfo);
+/******************************************************************************
+  Function:    action_getip
+  Description: Deal with "getip" request from web
+  Input:
+    (1)pinfo: A pointer to the structure storing the data from web
+  Output:
+  Return:
+  Others:
+*******************************************************************************/
+void action_getip(struct data_from_web *pinfo);
 #ifdef __cplusplus
 }
 #endif

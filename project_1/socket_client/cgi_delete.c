@@ -27,6 +27,16 @@
 #define SERV_PORT 3000  /* port number */
 #define DELETE_MARK_LEN 2 /* the length of the check message mark */
 
+/******************************************************************************
+ Function:     cgi_delete
+ Description:  delete a backup from server
+ Input:        id: the id of this record in database
+               IP: the server IP
+               IMSI:International Mobile Subscriber Identification Number
+ Output:       NONE
+ Return:       1:delete successful -1:delete failed
+ Others:       NONE
+*******************************************************************************/
 int cgi_delete(int id, char *IP, char *IMSI)
 {
     int sockfd;

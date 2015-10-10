@@ -55,6 +55,12 @@ int main(void)
     case ACTION_DELETE:
         action_delete(&info);
         break;
+    case ACTION_SETIP:
+        action_setip(&info);
+        break;
+    case ACTION_GETIP:
+        action_getip(&info);
+        break;
     default:
         break;
     }
@@ -86,7 +92,7 @@ int main(void)
 
     /* Output json string */
     output_test();
-    puts("output_test finished"); 
+    puts("output_test finished");
 
     free(pinput);
     return 0;
@@ -137,6 +143,14 @@ int main(void)
         puts("Action: delete");
         action_delete(&info);
         break;
+    case ACTION_SETIP:
+        puts("Action: setip");
+        action_setip(&info);
+        break;
+    case ACTION_GETIP:
+        puts("Action: getip");
+        action_getip(&info);
+        break;
     default:
         puts("Unexpected action");
         break;
@@ -180,6 +194,11 @@ int main(void)
     case ACTION_DELETE:
         action_delete(&info);
         break;
+    case ACTION_SETIP:
+        action_setip(&info);
+        break;
+    case ACTION_GETIP:
+        action_getip(&info);
     default:
         break;
     }

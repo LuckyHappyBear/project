@@ -28,11 +28,22 @@
 #define BACKUP_MARK_LEN 2 /* the length of the check message mark */
 #define FILE_BUFFER_LEN 1024 /* the size of the file buffer */
 
+/******************************************************************************
+ Function:     cgi_backup
+ Description:  backup a local config to server
+ Input:        IMSI:International Mobile Subscriber Identification Number
+               IP:the server IP
+               product_id: the id of the product
+               note: the note user input
+               file_path: the path of the config
+ Output:       NONE
+ Return:       1:successfule -1:failed
+ Others:       NONE
+*******************************************************************************/
 int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_path)
 {
     int sockfd;
     int start_pos;          /* count every field's start position */
-    int return_code;
     char version_no[14];
     struct sockaddr_in servaddr;
     char sendline[MAXLINE], recvline[MAXLINE];
@@ -64,8 +75,9 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
         return -1;
     }
 
-
+    /* information mark */
     strncpy(sendline, CGI_BACKUP, BACKUP_MARK_LEN);
+
     /* the third bit used to ditinguish data package or information package */
     sendline[2] = '0';
 
@@ -85,37 +97,46 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
     start_pos += VERSION_NUM_LEN;
     strncpy(&sendline[start_pos], note, strlen(note));
 
+    /* send the buffer and then clear it */
     send(sockfd, sendline, start_pos + strlen(note), 0);
+    memset(sendline, 0, MAXLINE);
+
     #if CGI_TEST
     printf("the sendline is %s\n",sendline);
     #endif
-    memset(sendline, 0, MAXLINE);
-    //printf("the length is %s\n", &sendline[start_pos]);
-    //file_path = "/home/luckybear/alpha.tar";
+
     while (1)
     {
         if (recv(sockfd, recvline, MAXLINE, 0) > 0)
         {
+            /* server receive the backup request and response */
             if (strncmp(recvline, BACKUP_RESPONSE, BACKUP_MARK_LEN) == 0)
             {
+                /* send request of sending data */
                 memset(sendline, 0, MAXLINE);
+
+                /* send request that client will send data */
                 strncpy(sendline, CGI_BACKUP, BACKUP_MARK_LEN);
                 sendline[2] = '1';
-                #if CGI_TEST
-                printf("The sendline is %s\n", sendline);
-                #endif
                 send(sockfd, sendline, strlen(sendline), 0);
+
                 memset(sendline, 0, MAXLINE);
                 memset(recvline, 0, MAXLINE);
 
-                /* wait for response */
+                #if CGI_TEST
+                printf("The sendline is %s\n", sendline);
+                #endif
+
+                /* wait for response from server */
                 while (recv(sockfd, recvline, MAXLINE, 0) > 0)
                 {
                     #if CGI_TEST
                     printf("did we reveice the response\n");
                     printf("The recvbuf content is %s\n",recvline);
                     #endif
-                    if(recvline[0] == '1')
+
+                    /* get the response of the server */
+                    if (recvline[0] == '1')
                     {
                         #if CGI_TEST
                         printf("we receive client's response\n");
@@ -124,9 +145,11 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                     }
                 }
 
+                /* file operation */
                 FILE *fp = fopen(file_path,"rb");
                 struct data_transfer *data = malloc(sizeof(*data));
-                if(NULL == fp)
+                /* the file didn't exist */
+                if (NULL == fp)
                 {
                     #if CGI_TEST
                     printf("File Not Found\n");
@@ -139,9 +162,12 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                     fseek(fp, 0, SEEK_SET);
                     fseek(fp, 0, SEEK_END);
                     long total_bytes = ftell(fp);
+
                     #if CGI_TEST
                     printf("The total length of the file is %ld\n",total_bytes);
                     #endif
+
+                    /* reset the file pointer */
                     fseek(fp, 0, SEEK_SET);
 
                     int length = 0;
@@ -154,75 +180,92 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                     memset(sendline, 0, MAXLINE);
                     while (1)
                     {
+                        /* we have transfer all content */
                         if ((left_len <= 0) || (read_len >= total_bytes))
                         {
+                            /* close the file and send the finish message */
                             fclose(fp);
                             memset(sendline, 0, MAXLINE);
                             sendline[0] = '0';
                             sendline[1] = '\0';
                             send(sockfd, sendline, strlen(sendline), 0);
+
                             memset(sendline, 0, MAXLINE);
                             memset(recvline, 0, MAXLINE);
+
                             #if CGI_TEST
                             printf("we finished here\n");
                             #endif
+
+                            /* wait for server's response */
                             while (recv(sockfd, recvline, MAXLINE, 0) > 0)
                             {
-                                if(recvline[0] == 'A')
+                                /* server receive successful */
+                                if (recvline[0] == 'A')
                                 {
                                     printf("transfer successful\n");
+                                    free(data);
                                     return 1;
                                 }
                                 else
                                 {
+                                    free(data);
                                     return -1;
                                 }
 
                             }
                         }
 
+                        /* the left file length larger than buffer length */
                         if (left_len >= FILE_BUFFER_SIZE)
                         {
+                            /* read and pad data */
                             memset(data->buffer, 0, FILE_BUFFER_SIZE);
                             length = fread(data->buffer, 1,
                                            FILE_BUFFER_SIZE, fp);
                             data->length = length;
+                            read_len += length;
+
                             #if CGI_TEST
                             printf("The length in there is  %d\n", length);
-                            #endif
-                            read_len += length;
-                            #if CGI_TEST
                             printf("The read_len is %d\n",read_len);
                             #endif
                         }
                         else
                         {
+                            /* pad left content in data */
                             memset(data->buffer, 0, FILE_BUFFER_SIZE);
                             length = fread(data->buffer, 1, left_len, fp);
+
                             #if CGI_TEST
                             printf("The length in there is  %d\n", length);
                             #endif
+
                             data->length = length;
                             read_len += length;
+
                             #if CGI_TEST
                             printf("The read_len is %d\n",read_len);
                             #endif
                         }
 
                         left_len = total_bytes - read_len;
-
+                        /* pad sendline */
                         sendline[0] = '1';
                         memcpy(&sendline[1], data, sizeof(*data));
+
                         #if CGI_TEST
                         printf("The length is %d\n",strlen(sendline));
                         printf("The sendbuffer is %s\n", sendline);
                         #endif
 
+                        /* send the data to server */
                         if (send(sockfd, sendline, sizeof(*data) + 1, 0) < 0)
                         {
                             #if CGI_TEST
                             perror("Send File Failed");
                             #endif
+                            free(data);
                             return -1;
                         }
                         else
@@ -230,6 +273,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                             #if CGI_TEST
                             printf("we reach here to wait for response\n");
                             #endif
+                            /* wait for server's response */
                             memset(recvline, 0, MAXLINE);
                             while (recv(sockfd, recvline, MAXLINE, 0) > 0)
                             {
@@ -237,6 +281,8 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                                 printf("did we reveice the response\n");
                                 printf("The recvbuf content is %s\n",recvline);
                                 #endif
+
+                                /* receive the right message from server */
                                 if(recvline[0] == '1')
                                 {
                                     #if CGI_TEST
@@ -252,7 +298,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                         memset(sendline, 0, MAXLINE);
                     }
                 }
-
+                free(data);
                 return 1;
             }
             else
@@ -265,6 +311,7 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
         }
         else
         {
+            /* receive error */
             #if CGI_TEST
             perror("cgi_backup:The server terminated prematurely\n");
             #endif
