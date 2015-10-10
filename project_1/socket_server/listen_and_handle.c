@@ -156,12 +156,13 @@ int main()
 
                     /* version_no field */
                     start_pos += PRODUCT_ID_LEN;
-                    strncpy(ver->version_no, &recvbuf[start_pos],
-                            VERSION_NUM_LEN);
+                    //strncpy(ver->version_no, &recvbuf[start_pos],
+                            //VERSION_NUM_LEN);
+                    get_version_no(ver->version_no);
                     ver->version_no[VERSION_NUM_LEN] = '\0';
 
                     /* note field */
-                    start_pos += VERSION_NUM_LEN;
+                    /*start_pos += VERSION_NUM_LEN;*/
                     strncpy(ver->note, &recvbuf[start_pos], MAX_NOTE_LEN);
                     ver->note[strlen(ver->note)] = '\0';
 

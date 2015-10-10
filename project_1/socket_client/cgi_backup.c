@@ -90,11 +90,11 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
 
     /* version_no field */
     start_pos += PRODUCT_ID_LEN;
-    get_version_no(version_no);
-    strncpy(&sendline[start_pos], version_no, VERSION_NUM_LEN);
+    /*get_version_no(version_no);
+    strncpy(&sendline[start_pos], version_no, VERSION_NUM_LEN);*/
 
     /* note field */
-    start_pos += VERSION_NUM_LEN;
+    //start_pos += VERSION_NUM_LEN;
     strncpy(&sendline[start_pos], note, strlen(note));
 
     /* send the buffer and then clear it */
