@@ -92,7 +92,9 @@ int cgi_recover(int id, char *IP, char *IMSI)
             {
                 if (recvline[2] == 'B')
                 {
+                    #if CGI_TEST
                     printf("recover failed\n");
+                    #endif
                     return -1;
                 }
 
