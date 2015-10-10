@@ -104,6 +104,7 @@ int main()
             /* receive check message */
             if (strncmp(recvbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
+                printf("************check function*************\n");
                 /* get the IMSI */
                 strncpy(IMSI, &recvbuf[RESPONSE_MARK_LEN],
                         IMSI_LEN);
@@ -131,6 +132,7 @@ int main()
             /* receive backup message */
             else if (strncmp(recvbuf, BACKUP_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
+                printf("************backup function*************\n");
                 //printf("we reach here or not(backup request.....)\n");
                 char file_path[512];
                 /* receive the backup request from client */
@@ -270,6 +272,7 @@ int main()
             /* receive getlist message */
             else if (strncmp(recvbuf, GETLIST_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
+                printf("************getlist function*************\n");
                 int list_num;
                 int length = sizeof(struct version_info);
                 char product_id[PRODUCT_ID_LEN + 1];
@@ -307,6 +310,7 @@ int main()
             /* receive delete message */
             else if (strncmp(recvbuf, DELETE_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
+                printf("************delete function*************\n");
                 int id;
                 char *id_imsi;
                 int  del_result;
@@ -351,6 +355,7 @@ int main()
             /* receive recover message */
             else if (strncmp(recvbuf, RECOVER_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
+                printf("************recover function*************\n");
                 int id;
                 /* get the IMSI */
                 strncpy(IMSI, &recvbuf[2], IMSI_LEN);

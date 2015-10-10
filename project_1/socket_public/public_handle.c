@@ -62,7 +62,9 @@ void get_version_no(char *time_buffer)
     sprintf(time_tmp, "%.2d", p->tm_sec);
     strncpy(&time_buffer[12], time_tmp, strlen(time_tmp));
     memset(time_tmp, 0, 4);
+    #if CGI_TEST
     printf("the time_buffer is %s\n", time_buffer);
+    #endif
 }
 
 /******************************************************************************
@@ -83,25 +85,25 @@ void cons_file_name(char *IMSI, char *product_id, char *version_no, char **file_
     strncpy((*file_name), IMSI, strlen(IMSI));
     start_pos += strlen(IMSI);
 
-    printf("cons_file_name:the imsi is %s\n", IMSI);
+    //printf("cons_file_name:the imsi is %s\n", IMSI);
 
-    printf("The filename is %s\n", (*file_name));
+    //printf("The filename is %s\n", (*file_name));
 
     (*file_name)[start_pos] = '_';
     start_pos += 1;
-    printf("The filename is %s\n", (*file_name));
+    //printf("The filename is %s\n", (*file_name));
 
     strncpy(&((*file_name)[start_pos]), product_id, strlen(product_id));
     start_pos += strlen(product_id);
-    printf("The filename is %s\n", (*file_name));
+    //printf("The filename is %s\n", (*file_name));
 
     (*file_name)[start_pos] = '_';
     start_pos += 1;
-    printf("The filename is %s\n", (*file_name));
+    //printf("The filename is %s\n", (*file_name));
 
     strncpy(&((*file_name)[start_pos]), version_no, strlen(version_no));
     start_pos += strlen(version_no);
 
     strncpy(&((*file_name)[start_pos]), ".tar", strlen(".tar"));
-    printf("The filename is %s\n", (*file_name));
+    //printf("The filename is %s\n", (*file_name));
 }

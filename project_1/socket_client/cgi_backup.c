@@ -204,7 +204,9 @@ int cgi_backup(char *IMSI, char *IP, char *product_id, char *note, char *file_pa
                                 /* server receive successful */
                                 if (recvline[0] == 'A')
                                 {
+                                    #if CGI_TEST
                                     printf("transfer successful\n");
+                                    #endif
                                     free(data);
                                     return 1;
                                 }
