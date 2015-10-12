@@ -66,7 +66,10 @@ int main()
     servaddr.sin_port = htons(SERV_PORT);
 
     /* bind the socket */
-    bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+    if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) <0 )
+    {
+        perror("problem in bind");
+    }
 
     /* listen to the socket by creating a connection queue,
        then wait for clients */
@@ -254,11 +257,14 @@ int main()
                         }
                         else
                         {
-                            /* send failed message to client */
+                            /* send failed message to client and
+                            * delete backup file in server */
+                            remove(file_path);
                             memset(sendbuf, 0, MAXLINE);
                             sendbuf[0] = 'B';
                             sendbuf[1] = '\0';
                             send(connfd, sendbuf, 2, 0);
+
                         }
                         memset(recvbuf, 0, MAXLINE);
                         memset(sendbuf, 0, MAXLINE);
