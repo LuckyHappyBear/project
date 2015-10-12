@@ -103,7 +103,6 @@ int main()
 
         while (recv(connfd, recvbuf, MAXLINE, 0) > 0)
         {
-            printf("The request is %s\n", recvbuf);
             /* receive check message */
             if (strncmp(recvbuf, CHECK_RESPONSE, RESPONSE_MARK_LEN) == 0)
             {
@@ -112,7 +111,6 @@ int main()
                 strncpy(IMSI, &recvbuf[RESPONSE_MARK_LEN],
                         IMSI_LEN);
                 IMSI[IMSI_LEN] = '\0';
-                printf("The IMSI is %s\n",IMSI);
 
                 /* get the used space */
                 int used = count(conn_ptr, IMSI);
@@ -138,6 +136,8 @@ int main()
                 printf("************backup function*************\n");
                 //printf("we reach here or not(backup request.....)\n");
                 char file_path[512];
+                char *note_add;
+                memset(file_path, 0, 512);
                 /* receive the backup request from client */
                 if (recvbuf[2] == '0')
                 {
@@ -168,8 +168,11 @@ int main()
                     /*start_pos += VERSION_NUM_LEN;*/
                     strncpy(ver->note, &recvbuf[start_pos], MAX_NOTE_LEN);
                     ver->note[strlen(ver->note)] = '\0';
+                    note_add = malloc(sizeof(char) * strlen(ver->note) * 2);
+                    add_note_handle(ver->note, &note_add);
 
-                    printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
+                    printf("imsi:%s\nproduct_id:%s\nversion_no:%s\nnote:%s\n",
+                           ver->imsi, ver->product_id, ver->version_no, ver->note);
 
                     /* use this informaion to construct file's name */
                     cons_file_name(ver->imsi, ver->product_id, ver->version_no, &file_name);
@@ -186,7 +189,6 @@ int main()
                     //printf("the first recvbuf length is %d\n", strlen(recvbuf));
 
                     /* get the storage location */
-                    memset(file_path, 0, 512);
                     strncat(file_path, LOCATION, strlen(LOCATION));
                     strncat(file_path, file_name, strlen(file_name));
 
@@ -240,14 +242,14 @@ int main()
                     else
                     {
                         /* receive successful and write completely */
-                        printf("we reach here?\n");
                         fclose(fp);
-                        printf("The imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver->imsi,ver->product_id,ver->version_no,ver->note);
+                        printf("imsi:%s\nproduct_id:%s\nversion_no:%s\nnote:%s\n",
+                               ver->imsi, ver->product_id, ver->version_no, ver->note);
                         printf("The file_path is %s\n", file_path);
 
                         /* add to database successful */
                         if (add(conn_ptr, ver->imsi, ver->version_no,
-                                ver->product_id, ver->note, file_path))
+                                ver->product_id, note_add, file_path))
                         {
                             /* send successful message to client */
                             memset(sendbuf, 0, MAXLINE);
@@ -298,7 +300,8 @@ int main()
                 /* get the product_id from client */
                 strncpy(product_id, &recvbuf[2 + IMSI_LEN], PRODUCT_ID_LEN);
                 product_id[PRODUCT_ID_LEN] = '\0';
-                printf("The IMSI is %s\nThe product_id is %s\n", IMSI, product_id);
+                printf("The IMSI is %s\nThe product_id is %s\n",
+                       IMSI, product_id);
 
                 /* get verion list */
                 struct version_info *ver_list;
@@ -308,7 +311,9 @@ int main()
                 int i;
                 for(i = 0; i < list_num; i ++)
                 {
-                    printf("The id is %d\nThe imsi is %s\nThe product_id is %s\nThe version_no is %s\nThe note is %s\n",ver_list[i].id, ver_list[i].imsi,ver_list[i].product_id, ver_list[i].version_no, ver_list[i].note);
+                    printf("id:%d\nimsi:%s\nproduct_id:%s\nversion_no:%s\nnote:%s\n",
+                           ver_list[i].id, ver_list[i].imsi, ver_list[i].product_id,
+                           ver_list[i].version_no, ver_list[i].note);
                 }
 
                 /* send version list and version number to client */

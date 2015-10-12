@@ -107,3 +107,62 @@ void cons_file_name(char *IMSI, char *product_id, char *version_no, char **file_
     strncpy(&((*file_name)[start_pos]), ".tar", strlen(".tar"));
     //printf("The filename is %s\n", (*file_name));
 }
+
+/******************************************************************************
+ Function:     add_note_handle
+ Description:  we user this function to handle sql can't insert \ and '
+ Input:        note: the note which user write
+               note_add: the note we have handled that can insert into database
+ Output:       NONE
+ Return:       NONE
+ Others:       NONE
+*******************************************************************************/
+void add_note_handle(char *note, char **note_add)
+{
+    int i, j = 0;
+    int length = strlen(note);
+    printf("The length of the note is %d\n", length);
+    for (i = 0; i < length; i++)
+    {
+        if ('\'' == note[i] || '\\' == note[i])
+        {
+            printf("we reach here to handle\n");
+            (*note_add)[j++] = '\\';
+            (*note_add)[j++] = note[i];
+        }
+        else
+        {
+            printf("we reach here to assign\n");
+            (*note_add)[j++] = note[i];
+        }
+    }
+    (*note_add)[j] = '\0';
+}
+
+/******************************************************************************
+ Function:     get_note_handle
+ Description:  we user this function to recover note get from database
+ Input:        note:the note insert into database
+               note_get: the note we get from database
+ Output:       NONE
+ Return:       NONE
+ Others:       NONE
+*******************************************************************************/
+void get_note_handle(char *note, char** note_get)
+{
+    int i, j = 0;
+    int length = strlen(note);
+    for (i = 0; i < length; i++)
+    {
+        if (note[i] == '\\')
+        {
+            (*note_get)[j++] = note[++i];
+        }
+        else
+        {
+            (*note_get)[j++] = note[i];
+        }
+    }
+    (*note_get)[j] = '\0';
+    return;
+}
